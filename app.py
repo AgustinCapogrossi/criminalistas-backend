@@ -11,14 +11,13 @@ MIN_LEN_NAME_NICK = 3
 app = FastAPI(title="mystery")
 
 origins = ["http://localhost:3000" "localhost:3000"]
-<<<<<<< HEAD
-=======
 
-# creation game
+# creating a game
 
 
 @app.post("/creationgame")
 async def game_creation(gametocreate: GameTemp):
+    """It creates an empty game with no players"""
     invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
     if (
         len(gametocreate.game_name) > MAX_LEN_NAME_GAME
@@ -32,17 +31,31 @@ async def game_creation(gametocreate: GameTemp):
         gametocreate.is_started = False
         new_game(gametocreate.game_name)
         return {"game": gametocreate.game_name}
-<<<<<<< HEAD
->>>>>>> 95178e9dacc13aac37ddf9b97def952493eb160c
-=======
 
 
-# creation user/nickname
+# joining a game
+
+
+@app.post("/joingame")
+async def join_game(gametocreate: GameTemp):
+    """It allows the user to join a match, as long as the match is not full or already ongoing"""
+    invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
+    if gametocreate.is_full:
+        raise HTTPException(status_code=404, detail="game is full")
+    elif gametocreate.is_started:
+        raise HTTPException(status_code=404, detail="game is not available")
+    else:
+        join_game(gametocreate.game_name)
+        return {"joining game": gametocreate.game_name}
+
+
+# creating a nickname/user
 
 
 @app.post("/creationuser")
 async def user_creation(user_to_create: str):
-    invalid_fields = HTTPException(status_code=404, detail="field size is invailde")
+    """It allows the player to set a nickname which will be displayed in game"""
+    invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
     if (
         len(user_to_create) > MAX_LEN_NAME_GAME
         or len(user_to_create) < MIN_LEN_NAME_GAME
@@ -53,4 +66,3 @@ async def user_creation(user_to_create: str):
     else:
         new_user(user_to_create)
         return {"user": user_to_create}
->>>>>>> 7418ecaaca89695d71bd6421de010eec8eefd89c

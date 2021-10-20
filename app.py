@@ -48,7 +48,9 @@ async def join_game(gametojoin: GameTemp):
     else:
         join_game(gametojoin.game_name)
         add_player(gametojoin.num_players)
-        insert_player(gametojoin)
+        insert_player(
+            gametojoin.game_name,
+        )
         return {"joining game": gametojoin.game_name}
 
 

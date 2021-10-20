@@ -54,6 +54,45 @@ def user_exist(name):
     if User.get(nickname=name) is not None:
         return True
 
+
+@db_session
+def game_exist(gname):
+    if Game.get(name=gname) is not None:
+        return True
+
+
 @db_session
 def join_game(new_name):
     Game(name=new_name, is_started=False, is_full=False)
+
+
+@db_session
+def get_number_player(num_user):
+    return Game.get(num_players=num_user)
+
+
+@db_session
+def is_full(num_user):
+    if get_number_player(num_user) == 6:
+        return True
+
+
+@db_session
+def is_started(started):
+    return Game.get(is_started=started)
+
+
+@db_session
+def add_player(num_user):
+    return get_number_player(num_user) + 1
+
+
+@db_session
+def get_game(game):
+    return Game.get(name=game)
+
+
+@db_session
+def insert_player(un_game, player):
+    game = get_game(un_game)
+    game.Player.add(player)

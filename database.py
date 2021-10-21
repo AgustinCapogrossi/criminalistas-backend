@@ -36,7 +36,7 @@ db.generate_mapping(create_tables=True)
 
 @db_session
 def new_game(new_name):
-    Game(name=new_name, is_started=False, is_full=False, num_players = 0)
+    Game(name=new_name, is_started=False, is_full=False, num_players=0)
 
 
 @db_session
@@ -54,23 +54,28 @@ def new_user(new_name):
 def user_exist(name):
     if User.get(nickname=name) is not None:
         return True
+
+
 @db_session
 def get_user(a_user):
     return User.get(name=a_user)
+
 
 @db_session
 def game_exist(gname):
     if Game.get(name=gname) is not None:
         return True
 
+
 @db_session
 def get_number_player(a_game):
-    return Game.get(num_players=a_game)
+    rowcount = count(u for u in Player)
+    return rowcount
 
 
 @db_session
 def is_full(num_players_game):
-    if Game.get(num_players) == 6:
+    if Game.get(num_players_game) == 6:
         return True
 
 
@@ -95,6 +100,7 @@ def insert_player(un_game, un_player):
     player = Player.get(name=un_player)
     game.Player.add(player)
 
+
 @db_session
 def new_player(name_player, name_game):
-    Player(name = name_player, user = get_user(name_player), game = get_game(name_game))
+    Player(name=name_player, user=get_user(name_player), game=get_game(name_game))

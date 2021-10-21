@@ -16,9 +16,10 @@ class User(db.Entity):
 
 class Player(db.Entity):
     id = PrimaryKey(int, auto=True)
-    host = Required(bool)
+    host = Optional(bool)
     user = Required(User)
     game = Required("Game")
+    name = Required(str)
 
 
 class Game(db.Entity):
@@ -26,7 +27,7 @@ class Game(db.Entity):
     name = Required(str)
     is_started = Required(bool)
     is_full = Required(bool)
-    num_players = Optional(int)
+    num_players = Required(int)
     players = Set(Player)
 
 
@@ -35,7 +36,7 @@ db.generate_mapping(create_tables=True)
 
 @db_session
 def new_game(new_name):
-    Game(name=new_name, is_started=False, is_full=False)
+    Game(name=new_name, is_started=False, is_full=False, num_players = 0)
 
 
 @db_session
@@ -53,27 +54,23 @@ def new_user(new_name):
 def user_exist(name):
     if User.get(nickname=name) is not None:
         return True
-
+@db_session
+def get_user(a_user):
+    return User.get(name=a_user)
 
 @db_session
 def game_exist(gname):
     if Game.get(name=gname) is not None:
         return True
 
-
 @db_session
-def join_game(new_name):
-    Game(name=new_name, is_started=False, is_full=False)
-
-
-@db_session
-def get_number_player(num_user):
-    return Game.get(num_players=num_user)
+def get_number_player(a_game):
+    return Game.get(num_players=a_game)
 
 
 @db_session
-def is_full(num_user):
-    if get_number_player(num_user) == 6:
+def is_full(num_players_game):
+    if Game.get(num_players) == 6:
         return True
 
 
@@ -97,3 +94,7 @@ def insert_player(un_game, un_player):
     game = get_game(un_game)
     player = Player.get(name=un_player)
     game.Player.add(player)
+
+@db_session
+def new_player(name_player, name_game):
+    Player(name = name_player, user = get_user(name_player), game = get_game(name_game))

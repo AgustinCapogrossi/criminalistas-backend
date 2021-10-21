@@ -37,18 +37,18 @@ async def game_creation(gametocreate: GameTemp):
 
 
 @app.post("/joingame")
-async def join_game(gametojoin: GameTemp, player_to_play: str):
+async def join_game(game_to_play:str, player_to_play: str):
     """It allows the user to join a match, as long as the match is not full or already ongoing"""
-    if is_full(gametojoin):
+    if is_full(game_to_play):
         raise HTTPException(status_code=404, detail="game is full")
-    if not game_exist(gametojoin):
+    if not game_exist(game_to_play):
         raise HTTPException(status_code=404, detail="game does not exist")
-    elif is_started(gametojoin):
+    elif is_started(game_to_play):
         raise HTTPException(status_code=404, detail="game is not available")
     else:
-        join_game(gametojoin.game_name)
-        add_player(gametojoin.num_players)
-        insert_player(gametojoin.game_name, player_to_play)
+        new_player(player_to_play, game_to_play)
+        insert_player(game_to_play, player_to_play)
+        add_player(game_to_play)
         return {"joining game": gametojoin.game_name}
 
 
@@ -60,8 +60,8 @@ async def user_creation(user_to_create: str):
     """It allows the player to set a nickname which will be displayed in game"""
     invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
     if (
-        len(user_to_create) > MAX_LEN_NAME_GAME
-        or len(user_to_create) < MIN_LEN_NAME_GAME
+        len(user_to_create) > MAX_LEN_NAME_NICK
+        or len(user_to_create) < MIN_LEN_NAME_NICK
     ):
         raise invalid_fields
     elif user_exist(user_to_create):
@@ -69,3 +69,7 @@ async def user_creation(user_to_create: str):
     else:
         new_user(user_to_create)
         return {"user": user_to_create}
+
+@app.get("/testfunction")
+async def test(game_to_test: str):
+    return {"num": get_number_player(game_to_test)}

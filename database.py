@@ -93,6 +93,7 @@ def get_game(game):
 
 
 @db_session
-def insert_player(un_game, player):
+def insert_player(un_game, un_player):
     game = get_game(un_game)
+    player = Player.get(name=un_player)
     game.Player.add(player)

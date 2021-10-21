@@ -37,7 +37,7 @@ async def game_creation(gametocreate: GameTemp):
 
 
 @app.post("/joingame")
-async def join_game(gametojoin: GameTemp):
+async def join_game(gametojoin: GameTemp, player_to_play: str):
     """It allows the user to join a match, as long as the match is not full or already ongoing"""
     if is_full(gametojoin):
         raise HTTPException(status_code=404, detail="game is full")
@@ -48,9 +48,7 @@ async def join_game(gametojoin: GameTemp):
     else:
         join_game(gametojoin.game_name)
         add_player(gametojoin.num_players)
-        insert_player(
-            gametojoin.game_name,
-        )
+        insert_player(gametojoin.game_name, player_to_play)
         return {"joining game": gametojoin.game_name}
 
 

@@ -1,8 +1,14 @@
+from logging import error
+from os import name
 from typing import List
 from pony.orm import *
+from pony.utils.utils import get_lambda_args
+
+from pydantic_models import GameTemp
+
+import sqlite3
 
 db = pony.orm.Database()
-
 
 db.bind(provider="sqlite", filename="db.mystery", create_db=True)
 
@@ -30,10 +36,6 @@ class Game(db.Entity):
     num_players = Optional(int)
     players = Set(Player)
 
-class List_of_Games(db.Entity):
-    games = List[Game]
-
-
 db.generate_mapping(create_tables=True)
 
 
@@ -58,6 +60,10 @@ def user_exist(name):
     if User.get(nickname=name) is not None:
         return True
 
+@db_session
+def get_user(a_user):
+    return User.get(name=a_user)
+    
 
 @db_session
 def game_exist(gname):
@@ -101,17 +107,33 @@ def insert_player(un_game, player):
     game = get_game(un_game)
     game.Player.add(player)
 
+@db_session
+def new_player(name_player, name_game):
+    Player(name=name_player, user=get_user(name_player), game=get_game(name_game))
+    
+    #VERSION QUE ANDA BIEN MAS O MENOS BIEN
 
 @db_session
-def get_all_games(data):
-    p = 0
-    games : List_of_Games
-    for p in len(data):
-        games[p] = get_game(data)
-    return games
+def get_all_games():
+    try:
+        conn = sqlite3.connect('db.mystery')
+        cursor = conn.cursor()
+        print("\n")
+        select_games = """SELECT * from Game"""
+        cursor.execute(select_games)
+        records =  cursor.fetchall()
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("is_started: ", row[2])
+            print("is_full: ", row[3])
+            print("num_players: ", row[4])
+            print("\n")
 
+            cursor.close()
 
-@db_session
-def game_is_available(game):
-    if not game.is_full and not game.is_started:
-        return True
+    except sqlite3.Error as error :
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()

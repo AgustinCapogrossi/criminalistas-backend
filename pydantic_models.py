@@ -10,3 +10,4 @@ class GameTemp(BaseModel):
     is_started: bool 
     is_full: bool 
 
+ 

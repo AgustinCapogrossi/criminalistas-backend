@@ -71,15 +71,16 @@ async def user_creation(user_to_create: str):
         return {"user": user_to_create}
 
 
+@app.get("/testfunction")
+async def test(game_to_test: str):
+    return {"num": get_number_player(game_to_test)}
+
+
 #show availables games
 
-
 @app.get("/show_available_games")
-async def show_games(games_to_show : GameTemp): ##Acá puse por poner GameTemp para que me levante el programa
-                                                ##Pero en realidad ahi dentro tiene que conectarse con
-                                                ##la base de datos, no se como hacerlo
+async def show_games():
+    """It shows all available games"""
     invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
-    if get_game(game_is_available(games_to_show)):
-        return {"games availables:" , games_to_show}
-    elif ( not game_exist(get_game(game_is_available(games_to_show)))):
-        raise HTTPException(status_code=404, detail="there is no games available")
+    my_list = get_all_games()
+    return my_list

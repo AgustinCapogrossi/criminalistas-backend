@@ -62,20 +62,19 @@ def get_user(a_user):
 
 
 @db_session
-def game_exist(gname):
-    if Game.get(name=gname) is not None:
+def game_exist(game):
+    if Game.get(name=game) is not None:
         return True
 
 
 @db_session
-def get_number_player(a_game):
-    rowcount = count(u for u in Player)
-    return rowcount
+def get_number_player(a_game:str):
+    return Game.get(name=a_game).num_players
 
 
 @db_session
-def is_full(num_players_game):
-    if Game.get(num_players_game) == 6:
+def is_full(the_game):
+    if get_number_player(the_game) == 6:
         return True
 
 

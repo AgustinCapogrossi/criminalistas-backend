@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi import Depends, HTTPException, status
 from database import *
 from pydantic_models import *
-
+from fastapi.middleware.cors import CORSMiddleware
 MAX_LEN_NAME_GAME = 10
 MIN_LEN_NAME_GAME = 3
 MAX_LEN_NAME_NICK = 6
@@ -11,6 +11,14 @@ MIN_LEN_NAME_NICK = 3
 app = FastAPI(title="mystery")
 
 origins = ["http://localhost:3000" "localhost:3000"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 # creating a game
 

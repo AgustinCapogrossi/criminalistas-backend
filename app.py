@@ -11,7 +11,7 @@ MIN_LEN_NAME_NICK = 3
 
 app = FastAPI(title="mystery")
 
-origins = ["http://localhost:3000" "localhost:3000"]
+origins = ["http://localhost:5000" "localhost:5000"]
 
 app.add_middleware(
     CORSMiddleware,

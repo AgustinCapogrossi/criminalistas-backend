@@ -58,7 +58,7 @@ async def join_game(game_to_play: str, player_to_play: str):
     else:
         new_player(player_to_play, game_to_play)
         insert_player(game_to_play, player_to_play)
-       # add_player(game_to_play)
+        add_player(game_to_play)
         return {"joining game": game_to_play}
 
 
@@ -95,3 +95,7 @@ async def exitgame(player_to_exit: str):
     else:
         player_delete(player_to_exit)
         return {"exit game"}
+
+@app.get("/testfunction")
+async def test(game_to_test: str):
+    return {"num": get_game_player(game_to_test)}

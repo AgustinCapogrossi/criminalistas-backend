@@ -81,9 +81,10 @@ def is_started(started):
 
 
 @db_session
-def add_player(num_user):
-    return get_number_player(num_user) + 1
-
+def add_player(a_game):
+    game = get_game(a_game)
+    sum_players = get_number_player(a_game) + 1
+    game.set(num_players = sum_players)
 
 @db_session
 def get_game(a_game):

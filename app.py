@@ -104,26 +104,37 @@ async def exitgame(player_to_exit: str, game_to_exit: str):
             return {"exit game"}
 
 
-#starting a game
+# starting a game
 @app.post("/start_game")
-async def start_the_game(game_to_start : str):
+async def start_the_game(game_to_start: str):
     """it starts the game"""
-
+    invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
     if is_started(game_to_start):
         raise HTTPException(status_code=404, detail="game is already started")
-    elif (get_number_player(game_to_start)<2):
+    elif get_number_player(game_to_start) < 2:
         raise HTTPException(status_code=404, detail="not enoght players to start game")
-    elif (not game_exist(game_to_start)):
+    elif not game_exist(game_to_start):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:
         start_game(game_to_start)
     return {"game started"}
 
-#show games
+
+# show games
+
 
 @app.get("/show_available_games")
 async def show_games():
-    """It shows all  games"""
-    invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
+    """It shows all games"""
     my_list = get_all_games()
+    return my_list
+
+
+# show player
+
+
+@app.get("/show_players")
+async def show_players():
+    """It shows all players"""
+    my_list = get_all_players()
     return my_list

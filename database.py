@@ -118,3 +118,8 @@ def player_delete(un_player):
 def player_exist(un_player):
     if Player.get(name=un_player) is not None:
         return True
+    
+@db_session
+def start_game(game):
+    my_game = get_game(game)
+    my_game.set(is_started = True)

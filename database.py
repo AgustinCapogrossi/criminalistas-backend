@@ -166,3 +166,10 @@ def get_all_games():
     finally:
         if conn:
             conn.close()
+
+
+
+@db_session
+def start_game(game):
+    my_game = get_game(game)
+    my_game.set(is_started = True)

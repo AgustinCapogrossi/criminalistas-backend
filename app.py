@@ -95,7 +95,3 @@ async def exitgame(player_to_exit: str):
     else:
         player_delete(player_to_exit)
         return {"exit game"}
-
-@app.get("/testfunction")
-async def test(game_to_test: str):
-    return {"num": get_game_player(game_to_test)}

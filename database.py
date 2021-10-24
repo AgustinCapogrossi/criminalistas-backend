@@ -1,4 +1,5 @@
 from pony.orm import *
+import sqlite3
 
 db = pony.orm.Database()
 
@@ -139,3 +140,29 @@ def player_delete(un_player):
 def player_exist(un_player):
     if Player.get(name=un_player) is not None:
         return True
+
+
+@db_session
+def get_all_games():
+    try:
+        conn = sqlite3.connect('db.mystery')
+        cursor = conn.cursor()
+        print("\n")
+        select_games = """SELECT * from Game"""
+        cursor.execute(select_games)
+        records =  cursor.fetchall()
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("is_started: ", row[2])
+            print("is_full: ", row[3])
+            print("num_players: ", row[4])
+            print("\n")
+
+            cursor.close()
+
+    except sqlite3.Error as error :
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()

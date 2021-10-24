@@ -102,3 +102,12 @@ async def exitgame(player_to_exit: str, game_to_exit: str):
         else:
             player_delete(player_to_exit)
             return {"exit game"}
+
+#show games
+
+@app.get("/show_available_games")
+async def show_games():
+    """It shows all  games"""
+    invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
+    my_list = get_all_games()
+    return my_list

@@ -5,7 +5,7 @@ from pydantic_models import *
 from fastapi.middleware.cors import CORSMiddleware
 MAX_LEN_NAME_GAME = 10
 MIN_LEN_NAME_GAME = 3
-MAX_LEN_NAME_NICK = 6
+MAX_LEN_NAME_NICK = 10
 MIN_LEN_NAME_NICK = 3
 
 app = FastAPI(title="mystery")
@@ -47,16 +47,18 @@ async def game_creation(gametocreate: GameTemp):
 @app.post("/joingame")
 async def join_game(game_to_play: str, player_to_play: str):
     """It allows the user to join a match, as long as the match is not full or already ongoing"""
-    if is_full(game_to_play):
-        raise HTTPException(status_code=404, detail="game is full")
     if not game_exist(game_to_play):
         raise HTTPException(status_code=404, detail="game does not exist")
+    elif is_full(game_to_play):
+        raise HTTPException(status_code=404, detail="game is full")
     elif is_started(game_to_play):
         raise HTTPException(status_code=404, detail="game is not available")
+    elif player_exist(player_to_play):
+        raise HTTPException(status_code=404, detail="player in game")
     else:
         new_player(player_to_play, game_to_play)
         insert_player(game_to_play, player_to_play)
-        add_player(game_to_play)
+       # add_player(game_to_play)
         return {"joining game": game_to_play}
 
 
@@ -82,3 +84,14 @@ async def user_creation(user_to_create: str):
 @app.get("/testfunction")
 async def test(game_to_test: str):
     return {"num": get_number_player(game_to_test)}
+
+@app.delete("/exitgame")
+async def exitgame(player_to_exit: str):
+    if not player_exist(player_to_exit):
+        raise HTTPException(
+            status_code=404,
+            detail="player not exist"
+        )
+    else:
+        player_delete(player_to_exit)
+        return {"exit game"}

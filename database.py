@@ -3,33 +3,30 @@ from pony.orm import *
 db = pony.orm.Database()
 
 
-db.bind(provider="sqlite", filename="db.mystery", create_db=True)
+db.bind('mysql', host='127.0.0.1', user='root', passwd='', db='mystery')
 
 # Games table and Functions
-
-
 class User(db.Entity):
-    id = PrimaryKey(int, auto=True)
-    nickname = Required(str)
-    player = Optional("Player")
+    username = pony.orm.Required(str, unique=True)
+    player = Optional('Player')
 
 
+#Player Table
 class Player(db.Entity):
     id = PrimaryKey(int, auto=True)
+    name = Required(str, unique=True)
     host = Optional(bool)
     user = Required(User)
-    game = Required("Game")
-    name = Required(str)
+    game = Required('Game')
 
-
+#Game Table
 class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_started = Required(bool)
     is_full = Required(bool)
     num_players = Required(int)
-    players = Set(Player)
-
+    Players = Set(Player)
 
 db.generate_mapping(create_tables=True)
 
@@ -47,18 +44,18 @@ def game_exist(un_name):
 
 @db_session
 def new_user(new_name):
-    User(nickname=new_name)
+    User(username=new_name)
 
 
 @db_session
-def user_exist(name):
-    if User.get(nickname=name) is not None:
+def user_exist(a_name):
+    if User.get(username=a_name) is not None:
         return True
 
 
 @db_session
 def get_user(a_user):
-    return User.get(name=a_user)
+    return User.get(username=a_user)
 
 
 @db_session
@@ -89,17 +86,27 @@ def add_player(num_user):
 
 
 @db_session
-def get_game(game):
-    return Game.get(name=game)
+def get_game(a_game):
+    return Game.get(name=a_game)
 
 
 @db_session
 def insert_player(un_game, un_player):
-    game = get_game(un_game)
     player = Player.get(name=un_player)
-    game.Player.add(player)
+    game = get_game(un_game)
+    game.Players.add(player)
 
 
 @db_session
 def new_player(name_player, name_game):
     Player(name=name_player, user=get_user(name_player), game=get_game(name_game))
+
+@db_session
+def player_delete(un_player):
+    player = Player.get(name=un_player)
+    Player.delete(player)
+
+@db_session
+def player_exist(un_player):
+    if Player.get(name=un_player) is not None:
+        return True

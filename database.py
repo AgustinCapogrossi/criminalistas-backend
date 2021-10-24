@@ -38,11 +38,11 @@ def new_game(new_name):
     Game(name=new_name, is_started=False, is_full=False, num_players=0)
 
 
+
 @db_session
 def game_delete(un_game):
     game = Game.get(name=un_game)
     Game.delete(game)
-
 
 @db_session
 def game_exist(un_name):
@@ -109,6 +109,7 @@ def insert_player(un_game, un_player):
 
 @db_session
 def new_player(name_player, name_game):
+
     Player(
         name=name_player,
         host=False,
@@ -131,7 +132,7 @@ def new_player_host(name_player, name_game):
 def player_delete(un_player):
     player = Player.get(name=un_player)
     curgame = player.game
-    curgame.set(num_players=get_number_player(curgame.name) - 1)
+    curgame.set(num_players=get_number_player(curgame.name)-1)
     Player.delete(player)
 
 
@@ -139,3 +140,4 @@ def player_delete(un_player):
 def player_exist(un_player):
     if Player.get(name=un_player) is not None:
         return True
+

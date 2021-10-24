@@ -18,7 +18,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
 # creating a game
@@ -44,6 +44,7 @@ async def game_creation(gametocreate: GameTemp):
         new_player_host(gametocreate.game_creator, gametocreate.game_name)
         insert_player(gametocreate.game_name, gametocreate.game_creator)
         add_player(gametocreate.game_name)
+
         return {"game": gametocreate.game_name}
 
 
@@ -91,14 +92,11 @@ async def user_creation(user_to_create: str):
 async def test(game_to_test: str):
     return {"num": get_number_player(game_to_test)}
 
-
 @app.delete("/exitgame")
-async def exitgame(player_to_exit: str, game_to_exit: str):
+async def exitgame(player_to_exit: str):
     if not player_exist(player_to_exit):
         raise HTTPException(status_code=404, detail="player does not exist")
     else:
-        if get_number_player(game_to_exit) == 0:
-            raise HTTPException(status_code=404, detail="game is empty")
-        else:
             player_delete(player_to_exit)
             return {"exit game"}
+

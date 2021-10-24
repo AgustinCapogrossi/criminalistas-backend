@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException, status
 from database import *
 from pydantic_models import *
 from fastapi.middleware.cors import CORSMiddleware
+
 MAX_LEN_NAME_GAME = 10
 MIN_LEN_NAME_GAME = 3
 MAX_LEN_NAME_NICK = 10
@@ -17,7 +18,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 # creating a game
@@ -90,10 +91,14 @@ async def user_creation(user_to_create: str):
 async def test(game_to_test: str):
     return {"num": get_number_player(game_to_test)}
 
+
 @app.delete("/exitgame")
-async def exitgame(player_to_exit: str):
+async def exitgame(player_to_exit: str, game_to_exit: str):
     if not player_exist(player_to_exit):
         raise HTTPException(status_code=404, detail="player does not exist")
     else:
+        if get_number_player(game_to_exit) == 0:
+            raise HTTPException(status_code=404, detail="game is empty")
+        else:
             player_delete(player_to_exit)
             return {"exit game"}

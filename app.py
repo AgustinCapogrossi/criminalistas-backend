@@ -108,7 +108,7 @@ async def exitgame(player_to_exit: str, game_to_exit: str):
 @app.post("/start_game")
 async def start_the_game(game_to_start : str):
     """it starts the game"""
-    invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
+
     if is_started(game_to_start):
         raise HTTPException(status_code=404, detail="game is already started")
     elif (get_number_player(game_to_start)<2):

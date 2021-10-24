@@ -103,6 +103,7 @@ async def exitgame(player_to_exit: str, game_to_exit: str):
             player_delete(player_to_exit)
             return {"exit game"}
 
+
 #starting a game
 @app.post("/start_game")
 async def start_the_game(game_to_start : str):

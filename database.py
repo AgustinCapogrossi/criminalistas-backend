@@ -19,6 +19,7 @@ class Player(db.Entity):
     host = Optional(bool)
     user = Required(User)
     game = Required("Game")
+    order = Required(int)
 
 
 # Game Table
@@ -113,6 +114,7 @@ def new_player(name_player, name_game):
     Player(
         name=name_player,
         host=False,
+        order=get_number_player(name_game),
         user=get_user(name_player),
         game=get_game(name_game),
     )
@@ -123,6 +125,7 @@ def new_player_host(name_player, name_game):
     Player(
         name=name_player,
         host=True,
+        order=0,
         user=get_user(name_player),
         game=get_game(name_game),
     )
@@ -143,14 +146,41 @@ def player_exist(un_player):
 
 
 @db_session
+def get_all_players():
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_player = """SELECT * from Player"""
+        cursor.execute(select_player)
+        records = cursor.fetchall()
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("host: ", row[2])
+            print("user: ", row[3])
+            print("game: ", row[4])
+            print("order: ", row[5])
+            print("\n")
+
+            cursor.close()
+
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+
+
+@db_session
 def get_all_games():
     try:
-        conn = sqlite3.connect('db.mystery')
+        conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
         select_games = """SELECT * from Game"""
         cursor.execute(select_games)
-        records =  cursor.fetchall()
+        records = cursor.fetchall()
         for row in records:
             print("id: ", row[0])
             print("name: ", row[1])
@@ -161,15 +191,14 @@ def get_all_games():
 
             cursor.close()
 
-    except sqlite3.Error as error :
+    except sqlite3.Error as error:
         print("Failed to read data from sqlite table", error)
     finally:
         if conn:
             conn.close()
 
 
-
 @db_session
 def start_game(game):
     my_game = get_game(game)
-    my_game.set(is_started = True)
+    my_game.set(is_started=True)

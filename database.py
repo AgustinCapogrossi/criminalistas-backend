@@ -111,7 +111,6 @@ def insert_player(un_game, player):
 def new_player(name_player, name_game):
     Player(name=name_player, user=get_user(name_player), game=get_game(name_game))
     
-    #VERSION QUE ANDA BIEN MAS O MENOS BIEN
 
 @db_session
 def get_all_games():

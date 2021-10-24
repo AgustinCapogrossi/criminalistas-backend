@@ -3,23 +3,24 @@ from pony.orm import *
 db = pony.orm.Database()
 
 
-db.bind('mysql', host='127.0.0.1', user='root', passwd='', db='mystery')
+db.bind(provider="sqlite", filename="db.mystery", create_db=True)
 
 # Games table and Functions
 class User(db.Entity):
     username = pony.orm.Required(str, unique=True)
-    player = Optional('Player')
+    player = Optional("Player")
 
 
-#Player Table
+# Player Table
 class Player(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str, unique=True)
     host = Optional(bool)
     user = Required(User)
-    game = Required('Game')
+    game = Required("Game")
 
-#Game Table
+
+# Game Table
 class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
@@ -27,6 +28,7 @@ class Game(db.Entity):
     is_full = Required(bool)
     num_players = Required(int)
     Players = Set(Player)
+
 
 db.generate_mapping(create_tables=True)
 
@@ -65,7 +67,7 @@ def game_exist(game):
 
 
 @db_session
-def get_number_player(a_game:str):
+def get_number_player(a_game: str):
     return Game.get(name=a_game).num_players
 
 
@@ -84,7 +86,8 @@ def is_started(started):
 def add_player(a_game):
     game = get_game(a_game)
     sum_players = get_number_player(a_game) + 1
-    game.set(num_players = sum_players)
+    game.set(num_players=sum_players)
+
 
 @db_session
 def get_game(a_game):
@@ -102,10 +105,14 @@ def insert_player(un_game, un_player):
 def new_player(name_player, name_game):
     Player(name=name_player, user=get_user(name_player), game=get_game(name_game))
 
+
 @db_session
 def player_delete(un_player):
     player = Player.get(name=un_player)
+    curgame = player.game
+    curgame.set(num_players=get_number_player(curgame.name)-1)
     Player.delete(player)
+
 
 @db_session
 def player_exist(un_player):

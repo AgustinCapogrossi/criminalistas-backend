@@ -27,7 +27,7 @@ class Player(db.Entity):
     user = Required(User)
     game = Required("Game")
 
-
+ 
 class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)

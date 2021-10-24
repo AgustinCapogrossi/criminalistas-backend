@@ -141,6 +141,7 @@ def player_exist(un_player):
     if Player.get(name=un_player) is not None:
         return True
 
+
 @db_session
 def get_all_games():
     try:

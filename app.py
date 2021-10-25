@@ -11,7 +11,7 @@ MIN_LEN_NAME_NICK = 3
 
 app = FastAPI(title="mystery")
 
-origins = ["http://localhost:5000" "localhost:5000"]
+origins = ["http://localhost:3000", "localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,6 +37,8 @@ async def game_creation(gametocreate: GameTemp, game_creator:str):
         raise HTTPException(status_code=404, detail="game exist")
     elif not user_exist(game_creator):
         raise HTTPException(status_code=404, detail="user does not exist")
+    elif player_exist(game_creator):
+        raise HTTPException(status_code=404, detail= "player in game")
     else:
         gametocreate.is_full = False
         gametocreate.is_started = False
@@ -127,7 +129,7 @@ async def start_the_game(game_to_start: str):
 async def show_games():
     """It shows all games"""
     my_list = get_all_games()
-    return my_list
+    return {my_list}
 
 
 # show player

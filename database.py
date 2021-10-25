@@ -1,5 +1,6 @@
 from pony.orm import *
 import sqlite3
+import random
 
 db = pony.orm.Database()
 
@@ -20,6 +21,8 @@ class Player(db.Entity):
     user = Required(User)
     game = Required("Game")
     order = Required(int)
+    dice_number = Required(int)
+    turn = Required(bool)
 
 
 # Game Table
@@ -117,6 +120,8 @@ def new_player(name_player, name_game):
         order=get_number_player(name_game),
         user=get_user(name_player),
         game=get_game(name_game),
+        dice_number = 0,
+        turn = False
     )
 
 
@@ -128,6 +133,8 @@ def new_player_host(name_player, name_game):
         order=0,
         user=get_user(name_player),
         game=get_game(name_game),
+        dice_number = 0,
+        turn = False
     )
 
 
@@ -161,6 +168,8 @@ def get_all_players():
             print("user: ", row[3])
             print("game: ", row[4])
             print("order: ", row[5])
+            print("dice number: ", row[6])
+            print("turn: ", row[7])
             print("\n")
 
             cursor.close()
@@ -202,3 +211,43 @@ def get_all_games():
 def start_game(game):
     my_game = get_game(game)
     my_game.set(is_started=True)
+
+
+@db_session
+def random_number_dice(player):
+    myPlayer = Player.get(name=player)
+    myPlayer.set(dice_number = random.randint(1,6))
+
+@db_session
+def dice_to_zero(player):
+    myPlayer = Player.get(name=player)
+    myPlayer.set(dice_number = 0)
+
+@db_session
+def enable_turn_to_player(player):
+    myPlayer = Player.get(name=player)
+    myPlayer.set(turn=True)
+
+@db_session
+def disable_turn_to_player(player):
+    myPlayer = Player.get(name=player)
+    myPlayer.set(turn = False)
+
+@db_session
+def player_is_in_turn(player):
+    myPlayer = Player.get(name=player)
+    return myPlayer.turn
+
+
+ # COMPLETAR
+
+@db_session
+def pass_the_turn(player, game_name):
+    myGame = get_game(game_name)
+    myPlayer = Player.get(name=player)
+    disable_turn_to_player(myPlayer)
+    actualOrderPlayer = myPlayer.order
+    #if(actualOrderPlayer == len(myGame.num_players)):
+    #    nextOrder = 0
+    #else:
+    #    nextPlayerOrder = orderPlayer+1

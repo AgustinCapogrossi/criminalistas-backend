@@ -138,3 +138,32 @@ async def show_players():
     """It shows all players"""
     my_list = get_all_players()
     return my_list
+
+
+# gives a number to a player
+
+@app.post("/dice_number")
+async def dice_number(player_name):
+    """gives a random dice number to a player in its turn"""
+    if(player_exist(player_name)):
+        enable_turn_to_player(player_name)
+        random_number_dice(player_name)
+        return {"number succesfully generated to player"}
+    else:
+        raise HTTPException(status_code=404, detail="player doesn't exist")
+
+
+# pass the turn
+
+@app.post("/pass_turn")
+async def pass_turn(player_name, game_name):
+    """it finish the turn of the player and give it to the next player"""
+    if(player_exist(player_name) and player_is_in_turn(player_name)):
+        pass_the_turn(player_name , game_name)
+        dice_to_zero(player_name)
+    elif (player_exist(player_name) and not player_is_in_turn(player_name)):
+        raise HTTPException(status_code=404, detail="player isn't in its turn")
+    elif( not player_exist(player_name)):
+        raise HTTPException(status_code=404, detail="player doesn't exist")
+    elif(not game_exist(game_name)):
+        raise HTTPException(status_code=404, detail="game doesn't exist")

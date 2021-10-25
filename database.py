@@ -120,8 +120,8 @@ def new_player(name_player, name_game):
         order=get_number_player(name_game),
         user=get_user(name_player),
         game=get_game(name_game),
-        dice_number = 0,
-        turn = False
+        dice_number=0,
+        turn=False,
     )
 
 
@@ -133,8 +133,8 @@ def new_player_host(name_player, name_game):
         order=0,
         user=get_user(name_player),
         game=get_game(name_game),
-        dice_number = 0,
-        turn = False
+        dice_number=0,
+        turn=False,
     )
 
 
@@ -214,24 +214,33 @@ def start_game(game):
 
 
 @db_session
+def get_player_order(player):
+    return Player.get(name=player).order
+
+
+@db_session
 def random_number_dice(player):
     myPlayer = Player.get(name=player)
-    myPlayer.set(dice_number = random.randint(1,6))
+    myPlayer.set(dice_number=random.randint(1, 6))
+
 
 @db_session
 def dice_to_zero(player):
     myPlayer = Player.get(name=player)
-    myPlayer.set(dice_number = 0)
+    myPlayer.set(dice_number=0)
+
 
 @db_session
 def enable_turn_to_player(player):
     myPlayer = Player.get(name=player)
     myPlayer.set(turn=True)
 
+
 @db_session
 def disable_turn_to_player(player):
     myPlayer = Player.get(name=player)
-    myPlayer.set(turn = False)
+    myPlayer.set(turn=False)
+
 
 @db_session
 def player_is_in_turn(player):
@@ -239,7 +248,8 @@ def player_is_in_turn(player):
     return myPlayer.turn
 
 
- # COMPLETAR
+# COMPLETAR
+
 
 @db_session
 def pass_the_turn(player, game_name):
@@ -247,7 +257,7 @@ def pass_the_turn(player, game_name):
     myPlayer = Player.get(name=player)
     disable_turn_to_player(myPlayer)
     actualOrderPlayer = myPlayer.order
-    #if(actualOrderPlayer == len(myGame.num_players)):
-    #    nextOrder = 0
-    #else:
-    #    nextPlayerOrder = orderPlayer+1
+    if actualOrderPlayer == get_number_player(game_name):
+        nextOrder = 0
+    else:
+        nextOrder = get_player_order(player) + 1

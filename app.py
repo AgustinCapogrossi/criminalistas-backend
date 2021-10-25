@@ -25,7 +25,7 @@ app.add_middleware(
 
 
 @app.post("/creationgame")
-async def game_creation(gametocreate: GameTemp):
+async def game_creation(gametocreate: GameTemp, game_creator:str):
     """It creates an empty game with no players"""
     invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
     if (
@@ -35,14 +35,14 @@ async def game_creation(gametocreate: GameTemp):
         raise invalid_fields
     elif game_exist(gametocreate.game_name):
         raise HTTPException(status_code=404, detail="game exist")
-    elif not user_exist(gametocreate.game_creator):
+    elif not user_exist(game_creator):
         raise HTTPException(status_code=404, detail="user does not exist")
     else:
         gametocreate.is_full = False
         gametocreate.is_started = False
         new_game(gametocreate.game_name)
-        new_player_host(gametocreate.game_creator, gametocreate.game_name)
-        insert_player(gametocreate.game_name, gametocreate.game_creator)
+        new_player_host(game_creator, gametocreate.game_name)
+        insert_player(gametocreate.game_name, game_creator)
         add_player(gametocreate.game_name)
         return {"game": gametocreate.game_name}
 

@@ -140,3 +140,65 @@ async def show_players():
     """It shows all players"""
     my_list = get_all_players()
     return my_list
+
+
+# start turn
+
+
+@app.post("/start turn")
+async def start_turn(player_name, game_name):
+    if (
+        player_exist(player_name)
+        and game_exist(game_name)
+        and not player_is_in_turn(player_name)
+        and is_started(game_name)
+    ):
+        enable_turn_to_player(player_name)
+    elif not is_started(game_name):
+        raise HTTPException(status_code=404, detail="game has not started yet")
+    elif player_is_in_turn(player_name):
+        raise HTTPException(status_code=404, detail="player is already in turn")
+    elif not player_exist(player_name):
+        raise HTTPException(status_code=404, detail="player doesn't exist")
+    elif not game_exist(game_name):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
+
+
+# end turn
+
+
+@app.post("/end turn")
+async def end_turn(player_name, game_name):
+    if (
+        player_exist(player_name)
+        and game_exist(game_name)
+        and player_is_in_turn(player_name)
+        and is_started(game_name)
+    ):
+        disable_turn_to_player(player_name)
+    elif not is_started(game_name):
+        raise HTTPException(status_code=404, detail="game has not started yet")
+    elif not player_is_in_turn(player_name):
+        raise HTTPException(status_code=404, detail="player is already not in turn")
+    elif not player_exist(player_name):
+        raise HTTPException(status_code=404, detail="player doesn't exist")
+    elif not game_exist(game_name):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
+
+
+# gives a number to a player
+
+
+@app.post("/dice_number")
+async def dice_number(player_name, game_name):
+    """gives a random dice number to a player in its turn"""
+    if (
+        player_exist(player_name)
+        and game_exist(game_name)
+        and is_started(game_name)
+        and player_is_in_turn(player_name)
+    ):
+        random_number_dice(player_name)
+        return {"number succesfully generated to player"}
+    else:
+        raise HTTPException(status_code=404, detail="player doesn't exist")

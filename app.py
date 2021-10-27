@@ -377,7 +377,6 @@ async def user_delete(user_name : str):
     elif (player_exist(user_name)):
         player_delete(user_name)
         delete_user(user_name)
-        
         return{"player and user successfully deleted"}
     else:
         delete_user(user_name)

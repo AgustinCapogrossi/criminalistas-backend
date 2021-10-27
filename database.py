@@ -255,7 +255,7 @@ def player_is_in_turn(player):
 def delete_game(game_name):
     game = get_game(game_name)
     Game.delete(game)
-
+ 
 @db_session
 def delete_user(user_name):
     user = get_user(user_name)

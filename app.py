@@ -356,3 +356,29 @@ async def delete_a_game(game_name : str):
     else:
         game_delete(game_name)
         return{"game successfully deleted"}
+    
+# Delete User
+
+@app.delete("/user/delete_user", tags=["User Methods"])
+async def user_delete(user_name : str):
+    """Deletes an user.
+    
+    Args: \n
+        user_name (str): Name of the user to delete. \n
+
+    Raises: \n
+        HTTPException: The user does not exist. \n
+
+    Returns: \n
+        str: Verification text.
+    """
+    if(not user_exist(user_name)):
+        raise HTTPException(status_code=404, detail="user doesn't exist")
+    elif (player_exist(user_name)):
+        player_delete(user_name)
+        delete_user(user_name)
+        
+        return{"player and user successfully deleted"}
+    else:
+        delete_user(user_name)
+        return{"user successfully deleted"}

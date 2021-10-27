@@ -56,9 +56,7 @@ async def user_creation(user_to_create: str):
 
 
 @app.post("/creationgame")
-async def game_creation(
-    game_name: str, num_players: str, is_started: bool, is_full: bool, game_creator: str
-):
+async def game_creation(game_name: str, game_creator: str):
     """It creates a new game and allocates it within the database.\n
 
     Args: \n
@@ -316,4 +314,4 @@ async def show_players(game_name):
     for i in range(0, len(my_list), 1):
         if my_list[i][4] == game_id:
             my_new_list.append(my_list[i])
-    return my_new_list
+    return my_new_list, game_id

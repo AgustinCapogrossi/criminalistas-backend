@@ -90,7 +90,7 @@ async def game_creation(
     else:
         is_full = False
         is_started = False
-        new_game(game_name)
+        new_game(game_name, game_creator)
         new_player_host(game_creator, game_name)
         insert_player(game_name, game_creator)
         add_player(game_name)
@@ -177,7 +177,7 @@ async def start_the_game(game_to_start: str):
     if is_started(game_to_start):
         raise HTTPException(status_code=404, detail="game is already started")
     elif get_number_player(game_to_start) < 2:
-        raise HTTPException(status_code=404, detail="not enoght players to start game")
+        raise HTTPException(status_code=404, detail="not enough players to start game")
     elif not game_exist(game_to_start):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:
@@ -295,7 +295,7 @@ async def dice_number(player_name, game_name):
         and player_is_in_turn(player_name)
     ):
         random_number_dice(player_name)
-        return {"number succesfully generated to player"}
+        return {"number successfully generated to player"}
     else:
         raise HTTPException(status_code=404, detail="player doesn't exist")
 
@@ -304,11 +304,16 @@ async def dice_number(player_name, game_name):
 
 
 @app.get("/show_players")
-async def show_players():
+async def show_players(game_name):
     """Returns the active players and their inner values.
 
     Returns: \n
         my_list: A list containing the active players and their inner values. \n
     """
     my_list = get_all_players()
-    return my_list
+    my_new_list = []
+    game_id = get_game_id(game_name)
+    for i in range(0, len(my_list), 1):
+        if my_list[i][4] == game_id:
+            my_new_list.append(my_list[i])
+    return my_new_list

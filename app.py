@@ -56,16 +56,17 @@ async def user_creation(user_to_create: str):
 
 
 @app.post("/creationgame")
-async def game_creation(gametocreate: GameTemp, game_creator: str):
-    """It creates a new game and allocates it within the database.
+async def game_creation(
+    game_name: str, num_players: str, is_started: bool, is_full: bool, game_creator: str
+):
+    """It creates a new game and allocates it within the database.\n
 
     Args: \n
-        gametocreate (GameTemp): Contains the necessary elements to create a game. \n
-                                game_name: str \n
-                                num_players: int \n
-                                is_started: bool \n
-                                is_full: bool \n
-        game_creator (str): Name of the player who is creating the game.
+        game_name (str): Name of the player. \n
+        num_players (str): Number of players in the game. \n
+        is_started (bool): Whether the game is started or not. \n
+        is_full (bool): Whether the game is full or not. \n
+        game_creator (str): Name of the creator of the game \n
 
     Raises: \n
         invalid_fields: Arbitrary value for the maximum length of the name. \n
@@ -76,26 +77,24 @@ async def game_creation(gametocreate: GameTemp, game_creator: str):
     Returns: \n
         str: Verification text.
     """
+
     invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
-    if (
-        len(gametocreate.game_name) > MAX_LEN_NAME_GAME
-        or len(gametocreate.game_name) < MIN_LEN_NAME_GAME
-    ):
+    if len(game_name) > MAX_LEN_NAME_GAME or len(game_name) < MIN_LEN_NAME_GAME:
         raise invalid_fields
-    elif game_exist(gametocreate.game_name):
+    elif game_exist(game_name):
         raise HTTPException(status_code=404, detail="game exist")
     elif not user_exist(game_creator):
         raise HTTPException(status_code=404, detail="user does not exist")
     elif player_exist(game_creator):
         raise HTTPException(status_code=404, detail="player in game")
     else:
-        gametocreate.is_full = False
-        gametocreate.is_started = False
-        new_game(gametocreate.game_name)
-        new_player_host(game_creator, gametocreate.game_name)
-        insert_player(gametocreate.game_name, game_creator)
-        add_player(gametocreate.game_name)
-        return {"game": gametocreate.game_name}
+        is_full = False
+        is_started = False
+        new_game(game_name)
+        new_player_host(game_creator, game_name)
+        insert_player(game_name, game_creator)
+        add_player(game_name)
+        return {"game": game_name}
 
 
 # joining a game
@@ -197,7 +196,7 @@ async def show_games():
         my_list: A list which contains the inner values of each game. \n
     """
     my_list = get_all_games()
-    return {my_list}
+    return my_list
 
 
 # start turn

@@ -163,12 +163,6 @@ def get_all_players():
         records = cursor.fetchall()
         playerList = []
         for row in records:
-<<<<<<< HEAD
-            player = [row[0], row[1], row[2], row[3], row[4], row[5]]
-            playerList.append(player)
-            cursor.close()
-        print(playerList)
-=======
             print("id: ", row[0])
             print("name: ", row[1])
             print("host: ", row[2])
@@ -181,7 +175,6 @@ def get_all_players():
             player = [row[0], row[1], row[2], row[3], row[4], row[5]]
             playerList.append(player)
             cursor.close()
->>>>>>> a6df29033dcfcf75554bac11b379aea2a5ee8e46
     except sqlite3.Error as error:
         print("Failed to read data from sqlite table", error)
     finally:
@@ -200,12 +193,6 @@ def get_all_games():
         records = cursor.fetchall()
         gamesList = []
         for row in records:
-<<<<<<< HEAD
-            games = [row[0], row[1], row[2], row[3], row[4]]
-            gamesList.append(games)
-            cursor.close()
-        print(gamesList)
-=======
             print("id: ", row[0])
             print("name: ", row[1])
             print("is_started: ", row[2])
@@ -215,7 +202,6 @@ def get_all_games():
             games = [row[0], row[1], row[2], row[3], row[4]]
             gamesList.append(games)
             cursor.close()
->>>>>>> a6df29033dcfcf75554bac11b379aea2a5ee8e46
     except sqlite3.Error as error:
         print("Failed to read data from sqlite table", error)
     finally:

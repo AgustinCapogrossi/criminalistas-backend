@@ -163,12 +163,6 @@ def get_all_players():
         records = cursor.fetchall()
         playerList = []
         for row in records:
-<<<<<<< HEAD
-            player = [row[0], row[1], row[2], row[3], row[4], row[5]]
-            playerList.append(player)
-            cursor.close()
-        print(playerList)
-=======
             print("id: ", row[0])
             print("name: ", row[1])
             print("host: ", row[2])
@@ -178,10 +172,9 @@ def get_all_players():
             print("dice number: ", row[6])
             print("turn: ", row[7])
             print("\n")
-            player = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            player = [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]]
             playerList.append(player)
             cursor.close()
->>>>>>> a6df29033dcfcf75554bac11b379aea2a5ee8e46
     except sqlite3.Error as error:
         print("Failed to read data from sqlite table", error)
     finally:
@@ -200,22 +193,16 @@ def get_all_games():
         records = cursor.fetchall()
         gamesList = []
         for row in records:
-<<<<<<< HEAD
-            games = [row[0], row[1], row[2], row[3], row[4]]
-            gamesList.append(games)
-            cursor.close()
-        print(gamesList)
-=======
             print("id: ", row[0])
             print("name: ", row[1])
-            print("is_started: ", row[2])
-            print("is_full: ", row[3])
-            print("num_players: ", row[4])
+            print("name: ", row[2])
+            print("is_started: ", row[3])
+            print("is_full: ", row[4])
+            print("num_players: ", row[5])
             print("\n")
-            games = [row[0], row[1], row[2], row[3], row[4]]
+            games = [row[0], row[1], row[2], row[3], row[4], row[5]]
             gamesList.append(games)
             cursor.close()
->>>>>>> a6df29033dcfcf75554bac11b379aea2a5ee8e46
     except sqlite3.Error as error:
         print("Failed to read data from sqlite table", error)
     finally:

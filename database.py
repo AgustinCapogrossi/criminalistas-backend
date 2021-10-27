@@ -29,6 +29,7 @@ class Player(db.Entity):
 class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
+    host_name = Required(str)
     is_started = Required(bool)
     is_full = Required(bool)
     num_players = Required(int)
@@ -39,8 +40,10 @@ db.generate_mapping(create_tables=True)
 
 
 @db_session
-def new_game(new_name):
-    Game(name=new_name, is_started=False, is_full=False, num_players=0)
+def new_game(new_name, creator):
+    Game(
+        name=new_name, host_name=creator, is_started=False, is_full=False, num_players=0
+    )
 
 
 @db_session
@@ -104,6 +107,9 @@ def add_player(a_game):
 def get_game(a_game):
     return Game.get(name=a_game)
 
+@db_session
+def get_game_id(a_game):
+    return Game.get(name=a_game).id
 
 @db_session
 def insert_player(un_game, un_player):
@@ -180,6 +186,7 @@ def get_all_players():
     finally:
         if conn:
             conn.close()
+    return playerList
 
 
 @db_session
@@ -208,6 +215,7 @@ def get_all_games():
     finally:
         if conn:
             conn.close()
+    return gamesList
 
 
 @db_session
@@ -249,18 +257,3 @@ def disable_turn_to_player(player):
 def player_is_in_turn(player):
     myPlayer = Player.get(name=player)
     return myPlayer.turn
-
-
-# COMPLETAR
-
-
-@db_session
-def pass_the_turn(player, game_name):
-    myGame = get_game(game_name)
-    myPlayer = Player.get(name=player)
-    disable_turn_to_player(myPlayer)
-    actualOrderPlayer = myPlayer.order
-    if actualOrderPlayer == get_number_player(game_name):
-        nextOrder = 0
-    else:
-        nextOrder = get_player_order(player) + 1

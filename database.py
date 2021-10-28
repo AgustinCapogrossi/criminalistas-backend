@@ -13,6 +13,7 @@ class User(db.Entity):
     player = Optional("Player", cascade_delete=True)
 
 
+
 # Player Table
 class Player(db.Entity):
     id = PrimaryKey(int, auto=True)
@@ -29,18 +30,21 @@ class Player(db.Entity):
 class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
+    host_name = Required(str)
     is_started = Required(bool)
     is_full = Required(bool)
     num_players = Required(int)
-    Players = Set("Player", cascade_delete=True)
+    Players = Set(Player)
 
 
 db.generate_mapping(create_tables=True)
 
 
 @db_session
-def new_game(new_name):
-    Game(name=new_name, is_started=False, is_full=False, num_players=0)
+def new_game(new_name, creator):
+    Game(
+        name=new_name, host_name=creator, is_started=False, is_full=False, num_players=0
+    )
 
 
 @db_session
@@ -104,6 +108,9 @@ def add_player(a_game):
 def get_game(a_game):
     return Game.get(name=a_game)
 
+@db_session
+def get_game_id(a_game):
+    return Game.get(name=a_game).id
 
 @db_session
 def insert_player(un_game, un_player):
@@ -172,7 +179,7 @@ def get_all_players():
             print("dice number: ", row[6])
             print("turn: ", row[7])
             print("\n")
-            player = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            player = [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]]
             playerList.append(player)
             cursor.close()
     except sqlite3.Error as error:
@@ -196,11 +203,12 @@ def get_all_games():
         for row in records:
             print("id: ", row[0])
             print("name: ", row[1])
-            print("is_started: ", row[2])
-            print("is_full: ", row[3])
-            print("num_players: ", row[4])
+            print("name: ", row[2])
+            print("is_started: ", row[3])
+            print("is_full: ", row[4])
+            print("num_players: ", row[5])
             print("\n")
-            games = [row[0], row[1], row[2], row[3], row[4]]
+            games = [row[0], row[1], row[2], row[3], row[4], row[5]]
             gamesList.append(games)
             cursor.close()
     except sqlite3.Error as error:

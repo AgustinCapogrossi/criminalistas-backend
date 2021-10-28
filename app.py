@@ -21,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 tags_metadata = [
     {"name": "User Methods", "description": "Gets all User Methods"},
     {"name": "Game Methods", "description": "Gets all Game Methods"},
@@ -30,10 +31,12 @@ tags_metadata = [
 
 app = FastAPI(openapi_tags=tags_metadata)
 
+
 # creating a nickname/user
 
 
 @app.post("/user/creationuser", tags= ["User Methods"])
+
 async def user_creation(user_to_create: str):
     """It creates a new user and allocates it in the database.
 
@@ -98,7 +101,8 @@ async def game_creation(
     else:
         is_full = False
         is_started = False
-        new_game(game_name)
+
+        new_game(game_name, game_creator)
         new_player_host(game_creator, game_name)
         insert_player(game_name, game_creator)
         add_player(game_name)
@@ -109,6 +113,7 @@ async def game_creation(
 
 
 @app.post("/game/joingame", tags=["Game Methods"])
+
 async def join_game(game_to_play: str, user_to_play: str):
     """It turns an user into a player and allocates them within a game.
 
@@ -146,13 +151,14 @@ async def join_game(game_to_play: str, user_to_play: str):
 # exit game
 
 
+
 @app.delete("/player/exitgame" , tags=["Player Methods"])
 async def exitgame(player_to_exit: str):
     """It allows a player to leave the game.
 
     Args: \n
         player_to_exit (str): Name of the player who is exiting the game. \n
-
+        
     Raises: \n
         HTTPException: The player does not exist. \n
 
@@ -169,7 +175,9 @@ async def exitgame(player_to_exit: str):
 # starting a game
 
 
+
 @app.post("/game/start_game" , tags=["Game Methods"])
+
 async def start_the_game(game_to_start: str):
     """It switches the state of the selected game to started.
 
@@ -213,6 +221,7 @@ async def show_games():
 
 
 @app.post("/turn/start turn" , tags=["Turn Methods"])
+
 async def start_turn(player_name, game_name):
     """A function which starts the turn of the selected player in the selected game.
 
@@ -247,7 +256,10 @@ async def start_turn(player_name, game_name):
 # end turn
 
 
+
 @app.post("/turn/end turn" , tags=["Turn Methods"])
+=======
+
 async def end_turn(player_name, game_name):
     """A function which ends the turn of the selected player in the selected game.
 
@@ -294,6 +306,7 @@ async def dice_number(player_name, game_name):
 
     Raises: \n
         HTTPException: The selected player does not exist. \n
+
         HTTPException: The selected game does not exist. \n
         HTTPException: The selected game is not started. \n
         HTTPException: The selected player isn't in turn. \n
@@ -308,6 +321,7 @@ async def dice_number(player_name, game_name):
         and player_is_in_turn(player_name)
     ):
         random_number_dice(player_name)
+
         return {"number succesfully generated to player"}
     elif(not player_exist(player_name)):
         raise HTTPException(status_code=404, detail="player doesn't exist")
@@ -317,7 +331,6 @@ async def dice_number(player_name, game_name):
         raise HTTPException(status_code=404, detail="game is not started")
     elif(is_started(game_name) and not player_is_in_turn(game_name)):
         raise HTTPException(status_code=404, detail="player isn't in turn")
-    
 
 
 # show player
@@ -331,9 +344,16 @@ async def show_players():
         my_list: A list containing the active players and their inner values. \n
     """
     my_list = get_all_players()
-    return my_list
-
+    my_new_list = []
+    game_id = get_game_id(game_name)
+    for i in range(0, len(my_list), 1):
+        if my_list[i][4] == game_id:
+            my_new_list.append(my_list[i])
+    return my_new_list, game_id
+  
+  
 # Delete Game
+
 
 @app.delete("/game/delete_game", tags=["Game Methods"])
 async def delete_a_game(game_name : str):

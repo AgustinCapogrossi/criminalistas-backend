@@ -22,10 +22,21 @@ app.add_middleware(
 )
 
 
+tags_metadata = [
+    {"name": "User Methods", "description": "Gets all User Methods"},
+    {"name": "Game Methods", "description": "Gets all Game Methods"},
+    {"name": "Turn Methods", "description": "Gets all Turn Methods"},
+    {"name": "Player Methods", "description": "Gets all PLayer Methods"},
+]
+
+app = FastAPI(openapi_tags=tags_metadata)
+
+
 # creating a nickname/user
 
 
-@app.post("/creationuser")
+@app.post("/user/creationuser", tags= ["User Methods"])
+
 async def user_creation(user_to_create: str):
     """It creates a new user and allocates it in the database.
 
@@ -55,8 +66,10 @@ async def user_creation(user_to_create: str):
 # creating a game
 
 
-@app.post("/creationgame")
-async def game_creation(game_name: str, game_creator: str):
+@app.post("/game/creationgame" , tags=["Game Methods"])
+async def game_creation(
+    game_name: str, num_players: str, is_started: bool, is_full: bool, game_creator: str
+):
     """It creates a new game and allocates it within the database.\n
 
     Args: \n
@@ -88,6 +101,7 @@ async def game_creation(game_name: str, game_creator: str):
     else:
         is_full = False
         is_started = False
+
         new_game(game_name, game_creator)
         new_player_host(game_creator, game_name)
         insert_player(game_name, game_creator)
@@ -98,7 +112,8 @@ async def game_creation(game_name: str, game_creator: str):
 # joining a game
 
 
-@app.post("/joingame")
+@app.post("/game/joingame", tags=["Game Methods"])
+
 async def join_game(game_to_play: str, user_to_play: str):
     """It turns an user into a player and allocates them within a game.
 
@@ -111,6 +126,7 @@ async def join_game(game_to_play: str, user_to_play: str):
         HTTPException: The game is full. \n
         HTTPException: The game is not available. \n
         HTTPException: The user is already in the game. \n
+        HTTPException: The user does not exist. \n
 
     Returns: \n
         str: Verification text.
@@ -122,7 +138,9 @@ async def join_game(game_to_play: str, user_to_play: str):
     elif is_started(game_to_play):
         raise HTTPException(status_code=404, detail="game is not available")
     elif player_exist(user_to_play):
-        raise HTTPException(status_code=404, detail="player in game")
+        raise HTTPException(status_code=404, detail="user in game")
+    elif not user_exist(user_to_play):
+        raise HTTPException(status_code=404, detail="user does not exist")
     else:
         new_player(user_to_play, game_to_play)
         insert_player(game_to_play, user_to_play)
@@ -133,14 +151,14 @@ async def join_game(game_to_play: str, user_to_play: str):
 # exit game
 
 
-@app.delete("/exitgame")
-async def exitgame(player_to_exit: str, game_to_exit: str):
+
+@app.delete("/player/exitgame" , tags=["Player Methods"])
+async def exitgame(player_to_exit: str):
     """It allows a player to leave the game.
 
     Args: \n
         player_to_exit (str): Name of the player who is exiting the game. \n
-        game_to_exit (str): Name of the game from which the player is exiting. \n
-
+        
     Raises: \n
         HTTPException: The player does not exist. \n
 
@@ -157,7 +175,9 @@ async def exitgame(player_to_exit: str, game_to_exit: str):
 # starting a game
 
 
-@app.post("/start_game")
+
+@app.post("/game/start_game" , tags=["Game Methods"])
+
 async def start_the_game(game_to_start: str):
     """It switches the state of the selected game to started.
 
@@ -175,7 +195,7 @@ async def start_the_game(game_to_start: str):
     if is_started(game_to_start):
         raise HTTPException(status_code=404, detail="game is already started")
     elif get_number_player(game_to_start) < 2:
-        raise HTTPException(status_code=404, detail="not enough players to start game")
+        raise HTTPException(status_code=404, detail="not enoght players to start game")
     elif not game_exist(game_to_start):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:
@@ -186,7 +206,7 @@ async def start_the_game(game_to_start: str):
 # show games
 
 
-@app.get("/show_available_games")
+@app.get("/game/show_available_games", tags=["Game Methods"])
 async def show_games():
     """Returns the inner values of each game.
 
@@ -200,7 +220,8 @@ async def show_games():
 # start turn
 
 
-@app.post("/start turn")
+@app.post("/turn/start turn" , tags=["Turn Methods"])
+
 async def start_turn(player_name, game_name):
     """A function which starts the turn of the selected player in the selected game.
 
@@ -235,7 +256,10 @@ async def start_turn(player_name, game_name):
 # end turn
 
 
-@app.post("/end turn")
+
+@app.post("/turn/end turn" , tags=["Turn Methods"])
+=======
+
 async def end_turn(player_name, game_name):
     """A function which ends the turn of the selected player in the selected game.
 
@@ -272,7 +296,7 @@ async def end_turn(player_name, game_name):
 # gives a number to a player
 
 
-@app.post("/dice_number")
+@app.post("/player/dice_number", tags=["Player Methods"])
 async def dice_number(player_name, game_name):
     """The function generates a random dice number for the player.
 
@@ -282,6 +306,10 @@ async def dice_number(player_name, game_name):
 
     Raises: \n
         HTTPException: The selected player does not exist. \n
+
+        HTTPException: The selected game does not exist. \n
+        HTTPException: The selected game is not started. \n
+        HTTPException: The selected player isn't in turn. \n
 
     Returns: \n
         str: Verification text.
@@ -293,16 +321,23 @@ async def dice_number(player_name, game_name):
         and player_is_in_turn(player_name)
     ):
         random_number_dice(player_name)
-        return {"number successfully generated to player"}
-    else:
+
+        return {"number succesfully generated to player"}
+    elif(not player_exist(player_name)):
         raise HTTPException(status_code=404, detail="player doesn't exist")
+    elif(not game_exist(game_name)):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
+    elif(not is_started(game_name)):
+        raise HTTPException(status_code=404, detail="game is not started")
+    elif(is_started(game_name) and not player_is_in_turn(game_name)):
+        raise HTTPException(status_code=404, detail="player isn't in turn")
 
 
 # show player
 
 
-@app.get("/show_players")
-async def show_players(game_name):
+@app.get("/player/show_players", tags=["Player Methods"])
+async def show_players():
     """Returns the active players and their inner values.
 
     Returns: \n
@@ -315,3 +350,29 @@ async def show_players(game_name):
         if my_list[i][4] == game_id:
             my_new_list.append(my_list[i])
     return my_new_list, game_id
+  
+  
+# Delete Game
+
+
+@app.delete("/game/delete_game", tags=["Game Methods"])
+async def delete_a_game(game_name : str):
+    """Deletes an empty game.
+    
+    Args: \n
+        game_name (str): Name of the game to delete. \n
+
+    Raises: \n
+        HTTPException: The game does not exist. \n
+        HTTPException: The game has at least one player in it. \n
+
+    Returns: \n
+        str: Verification text.
+    """
+    if (not game_exist(game_name)):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
+    elif (get_number_player(game_name)>0):
+        raise HTTPException(status_code=404, detail="game has players in it")
+    else:
+        game_delete(game_name)
+        return{"game successfully deleted"}

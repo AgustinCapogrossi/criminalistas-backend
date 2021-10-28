@@ -10,7 +10,8 @@ db.bind(provider="sqlite", filename="db.mystery", create_db=True)
 # Games table and Functions
 class User(db.Entity):
     username = pony.orm.Required(str, unique=True)
-    player = Optional("Player")
+    player = Optional("Player", cascade_delete=True)
+
 
 
 # Player Table
@@ -257,3 +258,8 @@ def disable_turn_to_player(player):
 def player_is_in_turn(player):
     myPlayer = Player.get(name=player)
     return myPlayer.turn
+
+@db_session
+def delete_game(game_name):
+    game = get_game(game_name)
+    Game.delete(game)

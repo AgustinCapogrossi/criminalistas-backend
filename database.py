@@ -35,7 +35,26 @@ class Game(db.Entity):
     num_players = Required(int)
     Players = Set(Player)
 
+# Game Cards
 
+class Cards_Monsters(db.Entity):
+    name = Required(str)
+    is_in_use = Required(bool)
+    is_in_envelope = Required(bool)
+    game = Required("Game")
+
+class Cards_Victims(db.Entity):
+    name = Required(str)
+    is_in_use = Required(bool)
+    is_in_envelope = Required(bool)
+    game = Required("Game")
+
+class Cards_Recintos(db.Entity):
+    name = Required(str)
+    is_in_use = Required(bool)
+    is_in_envelope = Required(bool)
+    game = Required("Game")
+    
 db.generate_mapping(create_tables=True)
 
 # -------------------------------------- GAME --------------------------------------
@@ -192,6 +211,37 @@ def get_user(a_user):
 def delete_user(user_name):
     user = get_user(user_name)
     User.delete(user)
+    
+@db_session
+def generate_cards(game_name):
+    cards_monster = ["Dŕacula", "Frankenstein", "Hombre Lobo", "Fantasma", "Momia", "Dr Jekyll Mr. Hyde" ]
+    cards_victims = ["Conde", "Condesa", "Ama de Llaves","Mayordomo", "Doncella", "Jardinero"]
+    cards_recintos = ["Cochera", "Alcoba", "Biblioteca", "Panteón", "Vestíbulo", "Bodega", "Salón", "Laboratorio"]
+
+    p = 0
+    for p in range(len(cards_monster)):
+        card_name = cards_monster[p]
+        Cards_Monsters(name = card_name,
+            is_in_use = False,
+            is_in_envelope = False,
+            game = get_game(game_name))
+    
+    p = 0
+    for p in range(len(cards_victims)):
+        card_name = cards_victims[p]
+        Cards_Victims(name = card_name,
+            is_in_use = False,
+            is_in_envelope = False,
+            game = get_game(game_name))
+    
+    p = 0
+    for p in range(len(cards_recintos)):
+        card_name = cards_recintos[p]
+        Cards_Recintos(name = card_name,
+            is_in_use = False,
+            is_in_envelope = False,
+            game = get_game(game_name))
+
 
 
 # -------------------------------------- PLAYER --------------------------------------

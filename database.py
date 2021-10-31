@@ -34,6 +34,9 @@ class Game(db.Entity):
     is_full = Required(bool)
     num_players = Required(int)
     Players = Set(Player)
+    cards_monsters = Set("Cards_Monsters")
+    cards_recintos = Set("Cards_Recintos")
+    cards_victims = Set("Cards_Victims")
 
 # Game Cards
 

@@ -33,7 +33,7 @@ class Game(db.Entity):
     is_started = Required(bool)
     is_full = Required(bool)
     num_players = Required(int)
-    Players = Set(Player)
+    Players = Set("Player", cascade_delete=True)
     cards_monsters = Set("Cards_Monsters")
     cards_recintos = Set("Cards_Recintos")
     cards_victims = Set("Cards_Victims")

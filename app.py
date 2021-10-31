@@ -401,3 +401,18 @@ async def user_delete(user_name : str):
     else:
         delete_user(user_name)
         return{"user successfully deleted"}
+    
+#Generate Cards
+
+@app.post("/game/generate_cards", tags= ["Game Methods"])
+async def cards_generator(game):
+    """Generate the game cards.
+    
+    Args: \n
+        cards_generator (str): Name of the game to generate cards. \n
+
+    Returns: \n
+        str: Verification text.
+    """
+    generate_cards(game)
+    return{"Cards Successfully generated for the game"}

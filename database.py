@@ -13,7 +13,6 @@ class User(db.Entity):
     player = Optional("Player", cascade_delete=True)
 
 
-
 # Player Table
 class Player(db.Entity):
     id = PrimaryKey(int, auto=True)
@@ -39,7 +38,7 @@ class Game(db.Entity):
 
 db.generate_mapping(create_tables=True)
 
-
+# -------------------------------------- GAME --------------------------------------
 @db_session
 def new_game(new_name, creator):
     Game(
@@ -56,28 +55,6 @@ def game_delete(un_game):
 @db_session
 def game_exist(un_name):
     if Game.get(name=un_name) is not None:
-        return True
-
-
-@db_session
-def new_user(new_name):
-    User(username=new_name)
-
-
-@db_session
-def user_exist(a_name):
-    if User.get(username=a_name) is not None:
-        return True
-
-
-@db_session
-def get_user(a_user):
-    return User.get(username=a_user)
-
-
-@db_session
-def game_exist(game):
-    if Game.get(name=game) is not None:
         return True
 
 
@@ -108,15 +85,116 @@ def add_player(a_game):
 def get_game(a_game):
     return Game.get(name=a_game)
 
+
 @db_session
 def get_game_id(a_game):
     return Game.get(name=a_game).id
+
 
 @db_session
 def insert_player(un_game, un_player):
     player = Player.get(name=un_player)
     game = get_game(un_game)
     game.Players.add(player)
+
+
+@db_session
+def get_all_games():
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_games = """SELECT * from Game"""
+        cursor.execute(select_games)
+        records = cursor.fetchall()
+        gamesList = []
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("name: ", row[2])
+            print("is_started: ", row[3])
+            print("is_full: ", row[4])
+            print("num_players: ", row[5])
+            print("\n")
+            games = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            gamesList.append(games)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return gamesList
+
+
+@db_session
+def start_game(game):
+    my_game = get_game(game)
+    my_game.set(is_started=True)
+
+
+@db_session
+def random_number_dice(player):
+    myPlayer = Player.get(name=player)
+    myPlayer.set(dice_number=random.randint(1, 6))
+
+
+@db_session
+def dice_to_zero(player):
+    myPlayer = Player.get(name=player)
+    myPlayer.set(dice_number=0)
+
+
+@db_session
+def enable_turn_to_player(player):
+    myPlayer = Player.get(name=player)
+    myPlayer.set(turn=True)
+
+
+@db_session
+def disable_turn_to_player(player):
+    myPlayer = Player.get(name=player)
+    myPlayer.set(turn=False)
+
+
+@db_session
+def player_is_in_turn(player):
+    myPlayer = Player.get(name=player)
+    return myPlayer.turn
+
+
+@db_session
+def delete_game(game_name):
+    game = get_game(game_name)
+    Game.delete(game)
+
+
+# -------------------------------------- USER --------------------------------------
+
+
+@db_session
+def new_user(new_name):
+    User(username=new_name)
+
+
+@db_session
+def user_exist(a_name):
+    if User.get(username=a_name) is not None:
+        return True
+
+
+@db_session
+def get_user(a_user):
+    return User.get(username=a_user)
+
+
+@db_session
+def delete_user(user_name):
+    user = get_user(user_name)
+    User.delete(user)
+
+
+# -------------------------------------- PLAYER --------------------------------------
 
 
 @db_session
@@ -188,83 +266,3 @@ def get_all_players():
         if conn:
             conn.close()
     return playerList
-
-
-@db_session
-def get_all_games():
-    try:
-        conn = sqlite3.connect("db.mystery")
-        cursor = conn.cursor()
-        print("\n")
-        select_games = """SELECT * from Game"""
-        cursor.execute(select_games)
-        records = cursor.fetchall()
-        gamesList = []
-        for row in records:
-            print("id: ", row[0])
-            print("name: ", row[1])
-            print("name: ", row[2])
-            print("is_started: ", row[3])
-            print("is_full: ", row[4])
-            print("num_players: ", row[5])
-            print("\n")
-            games = [row[0], row[1], row[2], row[3], row[4], row[5]]
-            gamesList.append(games)
-            cursor.close()
-    except sqlite3.Error as error:
-        print("Failed to read data from sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-    return gamesList
-
-
-@db_session
-def start_game(game):
-    my_game = get_game(game)
-    my_game.set(is_started=True)
-
-
-@db_session
-def get_player_order(player):
-    return Player.get(name=player).order
-
-
-@db_session
-def random_number_dice(player):
-    myPlayer = Player.get(name=player)
-    myPlayer.set(dice_number=random.randint(1, 6))
-
-
-@db_session
-def dice_to_zero(player):
-    myPlayer = Player.get(name=player)
-    myPlayer.set(dice_number=0)
-
-
-@db_session
-def enable_turn_to_player(player):
-    myPlayer = Player.get(name=player)
-    myPlayer.set(turn=True)
-
-
-@db_session
-def disable_turn_to_player(player):
-    myPlayer = Player.get(name=player)
-    myPlayer.set(turn=False)
-
-
-@db_session
-def player_is_in_turn(player):
-    myPlayer = Player.get(name=player)
-    return myPlayer.turn
-
-@db_session
-def delete_game(game_name):
-    game = get_game(game_name)
-    Game.delete(game)
- 
-@db_session
-def delete_user(user_name):
-    user = get_user(user_name)
-    User.delete(user)

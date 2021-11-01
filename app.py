@@ -327,9 +327,9 @@ async def dice_number(player_name, game_name):
         and is_started(game_name)
         and player_is_in_turn(player_name)
     ):
-        random_number_dice(player_name)
+        randNum = random_number_dice(player_name)
 
-        return {"number successfully generated to player"}
+        return randNum
     elif not player_exist(player_name):
         raise HTTPException(status_code=404, detail="player doesn't exist")
     elif not game_exist(game_name):

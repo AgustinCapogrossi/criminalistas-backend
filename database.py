@@ -33,6 +33,7 @@ class Player(db.Entity):
 class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
+    host_name = Required(str)
     is_started = Required(bool)
     is_full = Required(bool)
     num_players = Required(int)
@@ -75,8 +76,14 @@ db.generate_mapping(create_tables=True)
 
 
 @db_session
-def new_game(new_name):
-    Game(name=new_name, is_started=False, is_full=False, num_players=0)
+def new_game(new_name, creator_name):
+    Game(
+        name=new_name,
+        host_name=creator_name,
+        is_started=False,
+        is_full=False,
+        num_players=0,
+    )
 
 
 @db_session

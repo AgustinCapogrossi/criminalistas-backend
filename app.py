@@ -192,6 +192,7 @@ async def start_the_game(game_to_start: str):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:
         start_game(game_to_start)
+        generate_cards(game_to_start)
     return {"game started"}
 
 
@@ -383,6 +384,7 @@ async def user_delete(user_name : str):
         delete_user(user_name)
         return{"user successfully deleted"}
 
+
 #Generate Cards
 
 @app.post("/game/generate_cards", tags= ["Game Methods"])
@@ -412,3 +414,12 @@ async def select_envelope(game_name):
     """
     envelope(game_name)
     return {"Monster, Victim and Room Successfully selected."}
+
+#Distruibute Cards
+
+@app.post("/turn/distribute_cards", tags=["Turn Methods"])
+async def distribute_cards(a_game: str):
+    player_with_monsters(a_game)
+    player_with_recintos(a_game)
+    player_with_victims(a_game)
+    return{"cards distributes"}

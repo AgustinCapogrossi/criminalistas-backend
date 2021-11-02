@@ -25,7 +25,7 @@ class Player(db.Entity):
     dice_number = Required(int)
     turn = Required(bool)
     cards_monsters = Set("Cards_Monsters")
-    cards_recintos = Set("Cards_Recintos")
+    cards_rooms = Set("Cards_Rooms")
     cards_victims = Set("Cards_Victims")
 
 
@@ -53,6 +53,7 @@ class Cards_Monsters(db.Entity):
     game = Optional("Game")
     player = Optional(Player)
 
+
 class Cards_Victims(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
@@ -60,13 +61,15 @@ class Cards_Victims(db.Entity):
     is_in_envelope = Required(bool)
     game = Required("Game")
     player = Optional(Player)
-    
+
+
 class Cards_Rooms(db.Entity):
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
     game = Required("Game")
     player = Optional(Player)
+
 
 db.generate_mapping(create_tables=True)
 
@@ -301,10 +304,12 @@ def player_is_in_turn(player):
     myPlayer = Player.get(name=player)
     return myPlayer.turn
 
+
 @db_session
 def delete_game(game_name):
     game = get_game(game_name)
     Game.delete(game)
+
 
 @db_session
 def delete_user(user_name):
@@ -330,7 +335,7 @@ def generate_cards(game_name):
         "Doncella",
         "Jardinero",
     ]
-    cards_recintos = [
+    cards_rooms = [
         "Cochera",
         "Alcoba",
         "Biblioteca",
@@ -364,10 +369,12 @@ def generate_cards(game_name):
     p = 0
     for p in range(len(cards_rooms)):
         card_name = cards_rooms[p]
-        Cards_Rooms(name = card_name,
-            is_in_use = False,
-            is_in_envelope = False,
-            game = get_game(game_name))
+        Cards_Rooms(
+            name=card_name,
+            is_in_use=False,
+            is_in_envelope=False,
+            game=get_game(game_name),
+        )
 
 
 @db_session
@@ -377,11 +384,20 @@ def envelope(game):
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_cards = """UPDATE Cards_Monsters SET is_in_envelope=true WHERE game = %d ORDER BY RANDOM() LIMIT 1""" % mygameId 
+        select_cards = (
+            """UPDATE Cards_Monsters SET is_in_envelope=true WHERE game = %d ORDER BY RANDOM() LIMIT 1"""
+            % mygameId
+        )
         cursor.execute(select_cards)
-        select_cards = """UPDATE Cards_Victims SET is_in_envelope=true WHERE game = %d ORDER BY RANDOM() LIMIT 1""" % mygameId 
+        select_cards = (
+            """UPDATE Cards_Victims SET is_in_envelope=true WHERE game = %d ORDER BY RANDOM() LIMIT 1"""
+            % mygameId
+        )
         cursor.execute(select_cards)
-        select_cards = """UPDATE Cards_Rooms SET is_in_envelope=true WHERE game = %d ORDER BY RANDOM() LIMIT 1""" % mygameId 
+        select_cards = (
+            """UPDATE Cards_Rooms SET is_in_envelope=true WHERE game = %d ORDER BY RANDOM() LIMIT 1"""
+            % mygameId
+        )
         cursor.execute(select_cards)
         conn.commit()
         cursor.close()
@@ -390,11 +406,12 @@ def envelope(game):
     finally:
         if conn:
             conn.close()
-    return playerList
+
 
 @db_session
 def get_card_monster(card):
     return Cards_Monsters.get(name=card)
+
 
 @db_session
 def player_delete(un_player):
@@ -403,11 +420,12 @@ def player_delete(un_player):
     curgame.set(num_players=get_number_player(curgame.name) - 1)
     Player.delete(player)
 
+
 @db_session
 def get_card_room(card):
     return Cards_Rooms.get(name=card)
 
-  
+
 @db_session
 def get_card_victims(card):
     return Cards_Victims.get(name=card)
@@ -416,6 +434,11 @@ def get_card_victims(card):
 @db_session
 def get_player_order(a_player):
     return Player.get(name=a_player).order
+
+
+@db_session
+def get_card_game(card):
+    return Cards_Monsters.get(name=card).game
 
 
 @db_session
@@ -433,7 +456,7 @@ def player_with_monsters(a_game):
             game = row[4]
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
-                player_random = random.randint(1,num_player)
+                player_random = random.randint(1, num_player)
                 card = get_card_monster(name)
                 card.set(player=player_random)
                 card.set(is_in_use=True)
@@ -444,14 +467,15 @@ def player_with_monsters(a_game):
         if conn:
             conn.close()
 
+
 @db_session
-def player_with_recintos(a_game):
+def player_with_rooms(a_game):
     num_player = get_number_player(a_game)
     try:
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = """SELECT * from Cards_Recintos"""
+        select_card = """SELECT * from Cards_Rooms"""
         cursor.execute(select_card)
         records = cursor.fetchall()
         for row in records:
@@ -459,8 +483,8 @@ def player_with_recintos(a_game):
             game = row[4]
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
-                player_random = random.randint(1,num_player)
-                card = get_card_recinto(name)
+                player_random = random.randint(1, num_player)
+                card = get_card_room(name)
                 card.set(player=player_random)
                 card.set(is_in_use=True)
                 cursor.close()
@@ -470,15 +494,6 @@ def player_with_recintos(a_game):
         if conn:
             conn.close()
 
-
-@db_session
-def get_card_game(card):
-    return Cards_Monsters.get(name=card).game
-
-
-@db_session
-def player_with_monsters():
-    # num_player = get_number_player(a_game)
 
 @db_session
 def player_with_victims(a_game):
@@ -495,7 +510,7 @@ def player_with_victims(a_game):
             game = row[4]
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
-                player_random = random.randint(1,num_player)
+                player_random = random.randint(1, num_player)
                 card = get_card_victims(name)
                 card.set(player=player_random)
                 card.set(is_in_use=True)
@@ -505,4 +520,3 @@ def player_with_victims(a_game):
     finally:
         if conn:
             conn.close()
-

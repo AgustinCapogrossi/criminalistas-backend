@@ -453,6 +453,6 @@ async def select_envelope(game_name):
 @app.post("/turn/distribute_cards", tags=["Turn Methods"])
 async def distribute_cards(a_game: str):
     player_with_monsters(a_game)
-    player_with_recintos(a_game)
+    player_with_rooms(a_game)
     player_with_victims(a_game)
     return{"cards distributes"}

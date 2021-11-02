@@ -92,6 +92,11 @@ def get_game_id(a_game):
 
 
 @db_session
+def get_game_host(a_game):
+    return Game.get(name=a_game).host_name
+
+
+@db_session
 def get_all_games():
     try:
         conn = sqlite3.connect("db.mystery")

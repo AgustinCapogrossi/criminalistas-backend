@@ -210,6 +210,8 @@ async def start_the_game(game_to_start: str):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:
         start_game(game_to_start)
+        host_name = get_game_host(game_to_start)
+        enable_turn_to_player(host_name)
     return {"game started"}
 
 
@@ -294,17 +296,14 @@ async def start_turn(player_name, game_name):
 @app.post("/end turn")
 async def end_turn(player_name, game_name):
     """A function which ends the turn of the selected player in the selected game.
-
     Args: \n
         player_name (str): Name of the player whose turn we want to end. \n
         game_name (str): Name of the game in which the player is currently playing. \n
-
     Raises: \n
         HTTPException: The specified game is not started. \n
         HTTPException: The selected player's turn is not ongoing. \n
         HTTPException: The selected player does not exist. \n
         HTTPException: The selected game does not exist. \n
-
     Returns: \n
         str: Verification text.
     """
@@ -315,6 +314,18 @@ async def end_turn(player_name, game_name):
         and is_started(game_name)
     ):
         disable_turn_to_player(player_name)
+        order = get_player_order(player_name)
+        my_list = get_all_players()
+        my_new_list = []
+        game_id = get_game_id(game_name)
+        for i in range(0, len(my_list), 1):
+            if my_list[i][4] == game_id:
+                my_new_list.append(my_list[i])
+        if order == len(my_new_list) - 1:
+            order = -1
+        for i in range(0, len(my_new_list), 1):
+            if my_new_list[i][5] == order + 1:
+                enable_turn_to_player(my_new_list[i][1])
     elif not is_started(game_name):
         raise HTTPException(status_code=404, detail="game has not started yet")
     elif not player_is_in_turn(player_name):

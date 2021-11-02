@@ -38,7 +38,9 @@ class Game(db.Entity):
     cards_rooms = Set("Cards_Rooms")
     cards_victims = Set("Cards_Victims")
 
+
 # Game Cards
+
 
 class Cards_Monsters(db.Entity):
     name = Required(str)
@@ -46,11 +48,13 @@ class Cards_Monsters(db.Entity):
     is_in_envelope = Required(bool)
     game = Required("Game")
 
+
 class Cards_Victims(db.Entity):
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
     game = Required("Game")
+
 
 class Cards_Rooms(db.Entity):
     name = Required(str)
@@ -224,7 +228,14 @@ def get_all_games():
             print("is_full: ", row[3])
             print("num_players: ", row[4])
             print("\n")
-            games = [row[0], row[1], row[2], row[3], row[4]]
+            games = [
+                row[0],
+                row[1],
+                row[2],
+                row[3],
+                row[4],
+                row[5],
+            ]
             gamesList.append(games)
             cursor.close()
     except sqlite3.Error as error:
@@ -250,6 +261,7 @@ def get_player_order(player):
 def random_number_dice(player):
     myPlayer = Player.get(name=player)
     myPlayer.set(dice_number=random.randint(1, 6))
+    return myPlayer.dice_number
 
 
 @db_session
@@ -285,36 +297,64 @@ def delete_user(user_name):
     user = get_user(user_name)
     User.delete(user)
 
+
 @db_session
 def generate_cards(game_name):
-    cards_monster = ["Dŕacula", "Frankenstein", "Hombre Lobo", "Fantasma", "Momia", "Dr Jekyll Mr. Hyde" ]
-    cards_victims = ["Conde", "Condesa", "Ama de Llaves","Mayordomo", "Doncella", "Jardinero"]
-    cards_rooms = ["Cochera", "Alcoba", "Biblioteca", "Panteón", "Vestíbulo", "Bodega", "Salón", "Laboratorio"]
+    cards_monster = [
+        "Dŕacula",
+        "Frankenstein",
+        "Hombre Lobo",
+        "Fantasma",
+        "Momia",
+        "Dr Jekyll Mr. Hyde",
+    ]
+    cards_victims = [
+        "Conde",
+        "Condesa",
+        "Ama de Llaves",
+        "Mayordomo",
+        "Doncella",
+        "Jardinero",
+    ]
+    cards_recintos = [
+        "Cochera",
+        "Alcoba",
+        "Biblioteca",
+        "Panteón",
+        "Vestíbulo",
+        "Bodega",
+        "Salón",
+        "Laboratorio",
+    ]
 
     p = 0
     for p in range(len(cards_monster)):
         card_name = cards_monster[p]
-        Cards_Monsters(name = card_name,
-            is_in_use = False,
-            is_in_envelope = False,
-            game = get_game(game_name))
-    
+        Cards_Monsters(
+            name=card_name,
+            is_in_use=False,
+            is_in_envelope=False,
+            game=get_game(game_name),
+        )
+
     p = 0
     for p in range(len(cards_victims)):
         card_name = cards_victims[p]
-        Cards_Victims(name = card_name,
-            is_in_use = False,
-            is_in_envelope = False,
-            game = get_game(game_name))
-    
+        Cards_Victims(
+            name=card_name,
+            is_in_use=False,
+            is_in_envelope=False,
+            game=get_game(game_name),
+        )
+
     p = 0
+
     for p in range(len(cards_rooms)):
         card_name = cards_rooms[p]
         Cards_Rooms(name = card_name,
             is_in_use = False,
             is_in_envelope = False,
             game = get_game(game_name))
-
 
 @db_session
 def envelope(game):

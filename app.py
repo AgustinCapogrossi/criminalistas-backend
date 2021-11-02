@@ -309,7 +309,7 @@ async def dice_number(player_name, game_name):
     ):
         random_number_dice(player_name)
         return {"number succesfully generated to player"}
-    elif(not player_exist(player_name)):
+    elif not player_exist(player_name):
         raise HTTPException(status_code=404, detail="player doesn't exist")
     elif(not game_exist(game_name)):
         raise HTTPException(status_code=404, detail="game doesn't exist")

@@ -417,4 +417,6 @@ async def user_delete(user_name: str):
 @app.post("/turn/distribute_cards", tags=["Turn Methods"])
 async def distribute_cards(a_game: str):
     player_with_monsters(a_game)
-    return{"cards distribuidas"}
+    player_with_recintos(a_game)
+    player_with_victims(a_game)
+    return{"cards distributes"}

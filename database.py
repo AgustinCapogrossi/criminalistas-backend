@@ -325,10 +325,15 @@ def get_all_players():
     return playerList
 
 @db_session
-def get_card_game(card):
-    return Cards_Monsters.get(name=card).game
 def get_card_monster(card):
     return Cards_Monsters.get(name=card)
+@db_session
+def get_card_recinto(card):
+    return Cards_Recintos.get(name=card)
+@db_session
+def get_card_victims(card):
+    return Cards_Victims.get(name=card)
+
 @db_session
 def player_with_monsters(a_game):
     num_player = get_number_player(a_game)
@@ -355,6 +360,57 @@ def player_with_monsters(a_game):
         if conn:
             conn.close()
 
+@db_session
+def player_with_recintos(a_game):
+    num_player = get_number_player(a_game)
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_card = """SELECT * from Cards_Recintos"""
+        cursor.execute(select_card)
+        records = cursor.fetchall()
+        for row in records:
+            name = row[1]
+            game = row[4]
+            value = row[3]
+            if (get_game_id(a_game) == game) and (value == 0):
+                player_random = random.randint(1,num_player)
+                card = get_card_recinto(name)
+                card.set(player=player_random)
+                card.set(is_in_use=True)
+                cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+
+@db_session
+def player_with_victims(a_game):
+    num_player = get_number_player(a_game)
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_card = """SELECT * from Cards_Victims"""
+        cursor.execute(select_card)
+        records = cursor.fetchall()
+        for row in records:
+            name = row[1]
+            game = row[4]
+            value = row[3]
+            if (get_game_id(a_game) == game) and (value == 0):
+                player_random = random.randint(1,num_player)
+                card = get_card_victims(name)
+                card.set(player=player_random)
+                card.set(is_in_use=True)
+                cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
 
 #  try:
 #        conn = sqlite3.connect("db.mystery")

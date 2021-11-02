@@ -27,6 +27,7 @@ class Player(db.Entity):
     cards_recintos = Set("Cards_Recintos")
     cards_victims = Set("Cards_Victims")
 
+
 # Game Table
 class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
@@ -39,26 +40,38 @@ class Game(db.Entity):
     cards_monsters = Set("Cards_Monsters")
     cards_recintos = Set("Cards_Recintos")
     cards_victims = Set("Cards_Victims")
+
+
 # Game Cards
 
+
 class Cards_Monsters(db.Entity):
+    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
     game = Optional("Game")
     player = Optional(Player)
+
+
 class Cards_Victims(db.Entity):
+    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
     game = Required("Game")
     player = Optional(Player)
+
+
 class Cards_Recintos(db.Entity):
+    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
     game = Required("Game")
     player = Optional(Player)
+
+
 db.generate_mapping(create_tables=True)
 
 # -------------------------------------- GAME --------------------------------------
@@ -93,8 +106,8 @@ def is_full(the_game):
 
 
 @db_session
-def is_started(started):
-    return Game.get(is_started=started)
+def is_started(a_game):
+    return Game.get(name=a_game).is_started
 
 
 @db_session
@@ -112,6 +125,11 @@ def get_game(a_game):
 @db_session
 def get_game_id(a_game):
     return Game.get(name=a_game).id
+
+
+@db_session
+def get_game_host(a_game):
+    return Game.get(name=a_game).host_name
 
 
 @db_session
@@ -215,37 +233,66 @@ def get_user(a_user):
 def delete_user(user_name):
     user = get_user(user_name)
     User.delete(user)
-    
+
+
 @db_session
 def generate_cards(game_name):
-    cards_monster = ["Dŕacula", "Frankenstein", "Hombre Lobo", "Fantasma", "Momia", "Dr Jekyll Mr. Hyde" ]
-    cards_victims = ["Conde", "Condesa", "Ama de Llaves","Mayordomo", "Doncella", "Jardinero"]
-    cards_recintos = ["Cochera", "Alcoba", "Biblioteca", "Panteón", "Vestíbulo", "Bodega", "Salón", "Laboratorio"]
+    cards_monster = [
+        "Dŕacula",
+        "Frankenstein",
+        "Hombre Lobo",
+        "Fantasma",
+        "Momia",
+        "Dr Jekyll Mr. Hyde",
+    ]
+    cards_victims = [
+        "Conde",
+        "Condesa",
+        "Ama de Llaves",
+        "Mayordomo",
+        "Doncella",
+        "Jardinero",
+    ]
+    cards_recintos = [
+        "Cochera",
+        "Alcoba",
+        "Biblioteca",
+        "Panteón",
+        "Vestíbulo",
+        "Bodega",
+        "Salón",
+        "Laboratorio",
+    ]
 
     p = 0
     for p in range(len(cards_monster)):
         card_name = cards_monster[p]
-        Cards_Monsters(name = card_name,
-            is_in_use = False,
-            is_in_envelope = False,
-            game = get_game(game_name))
-    
+        Cards_Monsters(
+            name=card_name,
+            is_in_use=False,
+            is_in_envelope=False,
+            game=get_game(game_name),
+        )
+
     p = 0
     for p in range(len(cards_victims)):
         card_name = cards_victims[p]
-        Cards_Victims(name = card_name,
-            is_in_use = False,
-            is_in_envelope = False,
-            game = get_game(game_name))
-    
+        Cards_Victims(
+            name=card_name,
+            is_in_use=False,
+            is_in_envelope=False,
+            game=get_game(game_name),
+        )
+
     p = 0
     for p in range(len(cards_recintos)):
         card_name = cards_recintos[p]
-        Cards_Recintos(name = card_name,
-            is_in_use = False,
-            is_in_envelope = False,
-            game = get_game(game_name))
-
+        Cards_Recintos(
+            name=card_name,
+            is_in_use=False,
+            is_in_envelope=False,
+            game=get_game(game_name),
+        )
 
 
 # -------------------------------------- PLAYER --------------------------------------
@@ -284,9 +331,16 @@ def player_delete(un_player):
     curgame.set(num_players=get_number_player(curgame.name) - 1)
     Player.delete(player)
 
+
 @db_session
 def get_player(a_player):
     return Player.get(name=a_player)
+
+
+@db_session
+def get_player_order(a_player):
+    return Player.get(name=a_player).order
+
 
 @db_session
 def player_exist(un_player):
@@ -324,25 +378,35 @@ def get_all_players():
             conn.close()
     return playerList
 
+
 @db_session
 def get_card_game(card):
     return Cards_Monsters.get(name=card).game
+
+
 @db_session
-def player_with_monsters(a_game):
-    num_player = get_number_player(a_game)
+def player_with_monsters():
+    # num_player = get_number_player(a_game)
     try:
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = "SELECT * from Card_Monsters"
+        select_card = "SELECT * from Cards_Monsters"
         cursor.execute(select_card)
         records = cursor.fetchall()
         for row in records:
-            if (get_game_id(a_game) == row[4])  and (row[3] != 0):
-                player_random = random_radint(1,num_player)
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("is_in_use: ", row[2])
+            print("is_in_envelope: ", row[3])
+            print("game: ", row[4])
+            """
+            if (get_game_id(a_game) == row[4]) and (row[3] != 0):
+                player_random = random.randint(1, num_player)
                 row[1].set(player=player_random)
                 row[1].set(is_in_use=True)
-                cursor.close()
+            """
+            cursor.close()
     except sqlite3.Error as error:
         print("Failed to read data from sqlite table", error)
     finally:

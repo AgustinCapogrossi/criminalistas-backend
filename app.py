@@ -211,6 +211,8 @@ async def start_the_game(game_to_start: str):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:
         start_game(game_to_start)
+        host_name = get_game_host(game_to_start)
+        enable_turn_to_player(host_name)
         generate_cards(game_to_start)
     return {"game started"}
 
@@ -227,6 +229,25 @@ async def show_games():
     """
     my_list = get_all_games()
     return my_list
+
+
+# show player
+
+
+@app.get("/player/show_players", tags=["Player Methods"])
+async def show_players(game_name):
+    """Returns the active players and their inner values.
+
+    Returns: \n
+        my_list: A list containing the active players and their inner values. \n
+    """
+    my_list = get_all_players()
+    my_new_list = []
+    game_id = get_game_id(game_name)
+    for i in range(0, len(my_list), 1):
+        if my_list[i][4] == game_id:
+            my_new_list.append(my_list[i])
+    return my_new_list
 
 
 # start turn
@@ -291,6 +312,18 @@ async def end_turn(player_name, game_name):
         and is_started(game_name)
     ):
         disable_turn_to_player(player_name)
+        order = get_player_order(player_name)
+        my_list = get_all_players()
+        my_new_list = []
+        game_id = get_game_id(game_name)
+        for i in range(0, len(my_list), 1):
+            if my_list[i][4] == game_id:
+                my_new_list.append(my_list[i])
+        if order == len(my_new_list) - 1:
+            order = -1
+        for i in range(0, len(my_new_list), 1):
+            if my_new_list[i][5] == order + 1:
+                enable_turn_to_player(my_new_list[i][1])
     elif not is_started(game_name):
         raise HTTPException(status_code=404, detail="game has not started yet")
     elif not player_is_in_turn(player_name):
@@ -339,25 +372,6 @@ async def dice_number(player_name, game_name):
         raise HTTPException(status_code=404, detail="game is not started")
     elif is_started(game_name) and not player_is_in_turn(game_name):
         raise HTTPException(status_code=404, detail="player isn't in turn")
-
-
-# show player
-
-
-@app.get("/player/show_players", tags=["Player Methods"])
-async def show_players(game_name):
-    """Returns the active players and their inner values.
-
-    Returns: \n
-        my_list: A list containing the active players and their inner values. \n
-    """
-    my_list = get_all_players()
-    my_new_list = []
-    game_id = get_game_id(game_name)
-    for i in range(0, len(my_list), 1):
-        if my_list[i][4] == game_id:
-            my_new_list.append(my_list[i])
-    return my_new_list, game_id
 
 
 # Delete Game
@@ -410,11 +424,13 @@ async def user_delete(user_name: str):
         return {"player and user successfully deleted"}
     else:
         delete_user(user_name)
-        return{"user successfully deleted"}
-    
-#card distruibuir
+        return {"user successfully deleted"}
+
+
+# card distribution
+
 
 @app.post("/turn/distribute_cards", tags=["Turn Methods"])
-async def distribute_cards(a_game: str):
-    player_with_monsters(a_game)
-    return{"cards distribuidas"}
+async def distribute_cards():
+    player_with_monsters()
+    return {"cards distribuidas"}

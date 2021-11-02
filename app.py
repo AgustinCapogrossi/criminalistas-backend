@@ -212,6 +212,7 @@ async def start_the_game(game_to_start: str):
         start_game(game_to_start)
         host_name = get_game_host(game_to_start)
         enable_turn_to_player(host_name)
+        generate_cards(game_to_start)
     return {"game started"}
 
 
@@ -254,41 +255,6 @@ async def delete_a_game(game_name: str):
 
 
 # ----------------------------------------- PLAYER -----------------------------------------
-
-# Starts Turn
-
-
-@app.post("/start turn")
-async def start_turn(player_name, game_name):
-    """A function which starts the turn of the selected player in the selected game.
-
-    Args: \n
-        player_name (str): Name of the player whose turn we want to start. \n
-        game_name (str): Name of the game in which the player is currently playing. \n
-
-    Raises: \n
-        HTTPException: The specified game is not started. \n
-        HTTPException: The selected player's turn is ongoing. \n
-        HTTPException: The selected player does not exist. \n
-        HTTPException: The selected game does not exist. \n
-    """
-    if (
-        player_exist(player_name)
-        and game_exist(game_name)
-        and not player_is_in_turn(player_name)
-        and is_started(game_name)
-    ):
-        enable_turn_to_player(player_name)
-    elif not is_started(game_name):
-        raise HTTPException(status_code=404, detail="game has not started yet")
-    elif player_is_in_turn(player_name):
-        raise HTTPException(status_code=404, detail="player is already in turn")
-    elif not player_exist(player_name):
-        raise HTTPException(status_code=404, detail="player doesn't exist")
-    elif not game_exist(game_name):
-        raise HTTPException(status_code=404, detail="game doesn't exist")
-    return {"Turn started"}
-
 
 # Ends Turn
 
@@ -382,3 +348,31 @@ async def show_players(game_name):
         if my_list[i][4] == game_id:
             my_new_list.append(my_list[i])
     return my_new_list
+
+
+# ----------------------------------------- CARDS -----------------------------------------
+
+# Generate Envelope
+
+
+@app.post("/envelope")
+async def select_envelope(game_name):
+    """Selects The Moster, Victim and Room that will go in the envelope
+    Args: \n
+        select_envelope (str): Name of the game to select the cards. \n
+    Returns: \n
+        str: Verification text.
+    """
+    envelope(game_name)
+    return {"Monster, Victim and Room Successfully selected."}
+
+
+# Distribute Cards
+
+
+@app.post("/distribute_cards")
+async def distribute_cards(a_game: str):
+    player_with_monsters(a_game)
+    player_with_rooms(a_game)
+    player_with_victims(a_game)
+    return {"cards distributes"}

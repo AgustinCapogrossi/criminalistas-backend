@@ -28,6 +28,7 @@ class Player(db.Entity):
     cards_recintos = Set("Cards_Recintos")
     cards_victims = Set("Cards_Victims")
 
+
 # Game Table
 class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
@@ -45,6 +46,7 @@ class Game(db.Entity):
 
 
 class Cards_Monsters(db.Entity):
+    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
@@ -52,6 +54,7 @@ class Cards_Monsters(db.Entity):
     player = Optional(Player)
 
 class Cards_Victims(db.Entity):
+    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
@@ -119,8 +122,8 @@ def is_full(the_game):
 
 
 @db_session
-def is_started(started):
-    return Game.get(is_started=started)
+def is_started(a_game):
+    return Game.get(name=a_game).is_started
 
 
 @db_session
@@ -133,6 +136,16 @@ def add_player(a_game):
 @db_session
 def get_game(a_game):
     return Game.get(name=a_game)
+
+
+@db_session
+def get_game_id(a_game):
+    return Game.get(name=a_game).id
+
+
+@db_session
+def get_game_host(a_game):
+    return Game.get(name=a_game).host_name
 
 
 @db_session
@@ -349,7 +362,6 @@ def generate_cards(game_name):
         )
 
     p = 0
-
     for p in range(len(cards_rooms)):
         card_name = cards_rooms[p]
         Cards_Rooms(name = card_name,
@@ -383,12 +395,28 @@ def envelope(game):
 @db_session
 def get_card_monster(card):
     return Cards_Monsters.get(name=card)
+
+@db_session
+def player_delete(un_player):
+    player = Player.get(name=un_player)
+    curgame = player.game
+    curgame.set(num_players=get_number_player(curgame.name) - 1)
+    Player.delete(player)
+
 @db_session
 def get_card_room(card):
     return Cards_Rooms.get(name=card)
+
+  
 @db_session
 def get_card_victims(card):
     return Cards_Victims.get(name=card)
+
+
+@db_session
+def get_player_order(a_player):
+    return Player.get(name=a_player).order
+
 
 @db_session
 def player_with_monsters(a_game):
@@ -441,6 +469,16 @@ def player_with_recintos(a_game):
     finally:
         if conn:
             conn.close()
+
+
+@db_session
+def get_card_game(card):
+    return Cards_Monsters.get(name=card).game
+
+
+@db_session
+def player_with_monsters():
+    # num_player = get_number_player(a_game)
 
 @db_session
 def player_with_victims(a_game):

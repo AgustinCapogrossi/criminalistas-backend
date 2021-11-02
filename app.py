@@ -21,8 +21,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ----------------------------------------- USER -----------------------------------------
 
-# creating a nickname/user
+# Creates a Nickname
 
 
 @app.post("/creationuser")
@@ -52,13 +53,38 @@ async def user_creation(user_to_create: str):
         return {"user": user_to_create}
 
 
-# creating a game
+# Deletes User
+
+
+@app.delete("/delete_user")
+async def user_delete(user_name: str):
+    """Deletes an user.
+
+    Args: \n
+        user_name (str): Name of the user to delete. \n
+    Raises: \n
+        HTTPException: The user does not exist. \n
+    Returns: \n
+        str: Verification text.
+    """
+    if not user_exist(user_name):
+        raise HTTPException(status_code=404, detail="user doesn't exist")
+    elif player_exist(user_name):
+        player_delete(user_name)
+        delete_user(user_name)
+        return {"player and user successfully deleted"}
+    else:
+        delete_user(user_name)
+        return {"user successfully deleted"}
+
+
+# ----------------------------------------- GAME -----------------------------------------
+
+# Creates a Game
 
 
 @app.post("/creationgame")
-async def game_creation(
-    game_name: str, num_players: str, is_started: bool, is_full: bool, game_creator: str
-):
+async def game_creation(game_name: str, game_creator: str):
     """It creates a new game and allocates it within the database.\n
 
     Args: \n
@@ -97,7 +123,7 @@ async def game_creation(
         return {"game": game_name}
 
 
-# joining a game
+# Joins a Game
 
 
 @app.post("/joingame")
@@ -125,6 +151,8 @@ async def join_game(game_to_play: str, user_to_play: str):
         raise HTTPException(status_code=404, detail="game is not available")
     elif player_exist(user_to_play):
         raise HTTPException(status_code=404, detail="player in game")
+    elif not user_exist(user_to_play):
+        raise HTTPException(status_code=404, detail="user does not exist")
     else:
         new_player(user_to_play, game_to_play)
         insert_player(game_to_play, user_to_play)
@@ -132,11 +160,11 @@ async def join_game(game_to_play: str, user_to_play: str):
         return {"joining game": game_to_play}
 
 
-# exit game
+# Exits a Game
 
 
 @app.delete("/exitgame")
-async def exitgame(player_to_exit: str, game_to_exit: str):
+async def exitgame(player_to_exit: str):
     """It allows a player to leave the game.
 
     Args: \n
@@ -156,7 +184,7 @@ async def exitgame(player_to_exit: str, game_to_exit: str):
         return {"exit game"}
 
 
-# starting a game
+# Starts a Game
 
 
 @app.post("/start_game")
@@ -185,7 +213,7 @@ async def start_the_game(game_to_start: str):
     return {"game started"}
 
 
-# show games
+# Shows Games
 
 
 @app.get("/show_available_games")
@@ -199,7 +227,33 @@ async def show_games():
     return my_list
 
 
-# start turn
+# Delete Game
+
+
+@app.delete("/delete_game")
+async def delete_a_game(game_name: str):
+    """Deletes an empty game.
+
+    Args: \n
+        game_name (str): Name of the game to delete. \n
+    Raises: \n
+        HTTPException: The game does not exist. \n
+        HTTPException: The game has at least one player in it. \n
+    Returns: \n
+        str: Verification text.
+    """
+    if not game_exist(game_name):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
+    elif get_number_player(game_name) > 0:
+        raise HTTPException(status_code=404, detail="game has players in it")
+    else:
+        delete_game(game_name)
+        return {"game successfully deleted"}
+
+
+# ----------------------------------------- PLAYER -----------------------------------------
+
+# Starts Turn
 
 
 @app.post("/start turn")
@@ -234,7 +288,7 @@ async def start_turn(player_name, game_name):
     return {"Turn started"}
 
 
-# end turn
+# Ends Turn
 
 
 @app.post("/end turn")
@@ -271,7 +325,7 @@ async def end_turn(player_name, game_name):
         raise HTTPException(status_code=404, detail="game doesn't exist")
 
 
-# gives a number to a player
+# Gives a number to a player
 
 
 @app.post("/dice_number")
@@ -300,7 +354,7 @@ async def dice_number(player_name, game_name):
         raise HTTPException(status_code=404, detail="player doesn't exist")
 
 
-# show player
+# Shows Player
 
 
 @app.get("/show_players")

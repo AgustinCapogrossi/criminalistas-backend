@@ -16,7 +16,7 @@ origins = ["http://localhost:3000", "localhost:3000"]
 tags_metadata = [
     {"name": "User Methods", "description": "Gets all User Methods"},
     {"name": "Game Methods", "description": "Gets all Game Methods"},
-    {"name": "Player Methods", "description": "Gets all Player Methods"},
+    {"name": "Player Methods", "description": "Gets all PLayer Methods"},
     {"name": "Cards Methods", "description": "Gets all Cards Methods"},
 ]
 

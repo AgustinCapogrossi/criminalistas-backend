@@ -9,9 +9,17 @@ MIN_LEN_NAME_GAME = 3
 MAX_LEN_NAME_NICK = 10
 MIN_LEN_NAME_NICK = 3
 
-app = FastAPI(title="mystery")
 
 origins = ["http://localhost:3000", "localhost:3000"]
+tags_metadata = [
+    {"name": "User Methods", "description": "Gets all User Methods"},
+    {"name": "Game Methods", "description": "Gets all Game Methods"},
+    {"name": "Player Methods", "description": "Gets all PLayer Methods"},
+    {"name": "Cards Methods", "description": "Gets all Cards Methods"},
+]
+
+app = FastAPI(openapi_tags=tags_metadata)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,7 +34,7 @@ app.add_middleware(
 # Creates a Nickname
 
 
-@app.post("/user/creationuser")
+@app.post("/user/creationuser", tags=["User Methods"])
 async def user_creation(user_to_create: str):
     """It creates a new user and allocates it in the database.
 
@@ -56,7 +64,7 @@ async def user_creation(user_to_create: str):
 # Deletes User
 
 
-@app.delete("/user/delete_user")
+@app.delete("/user/delete_user", tags=["User Methods"])
 async def user_delete(user_name: str):
     """Deletes an user.
 
@@ -83,7 +91,7 @@ async def user_delete(user_name: str):
 # Creates a Game
 
 
-@app.post("/game/creationgame")
+@app.post("/game/creationgame", tags=["Game Methods"])
 async def game_creation(game_name: str, game_creator: str):
     """It creates a new game and allocates it within the database.\n
 
@@ -126,7 +134,7 @@ async def game_creation(game_name: str, game_creator: str):
 # Joins a Game
 
 
-@app.post("/game/joingame")
+@app.post("/game/joingame", tags=["Game Methods"])
 async def join_game(game_to_play: str, user_to_play: str):
     """It turns an user into a player and allocates them within a game.
 
@@ -163,7 +171,7 @@ async def join_game(game_to_play: str, user_to_play: str):
 # Exits a Game
 
 
-@app.delete("/game/exitgame")
+@app.delete("/game/exitgame", tags=["Game Methods"])
 async def exitgame(player_to_exit: str):
     """It allows a player to leave the game.
 
@@ -187,7 +195,7 @@ async def exitgame(player_to_exit: str):
 # Starts a Game
 
 
-@app.post("/game/start_game")
+@app.post("/game/start_game", tags=["Game Methods"])
 async def start_the_game(game_to_start: str):
     """It switches the state of the selected game to started.
 
@@ -219,7 +227,7 @@ async def start_the_game(game_to_start: str):
 # Shows Games
 
 
-@app.get("/game/show_available_games")
+@app.get("/game/show_available_games", tags=["Game Methods"])
 async def show_games():
     """Returns the inner values of each game.
 
@@ -233,7 +241,7 @@ async def show_games():
 # Delete Game
 
 
-@app.delete("/game/delete_game")
+@app.delete("/game/delete_game", tags=["Game Methods"])
 async def delete_a_game(game_name: str):
     """Deletes an empty game.
 
@@ -259,7 +267,7 @@ async def delete_a_game(game_name: str):
 # Ends Turn
 
 
-@app.post("/player/end turn")
+@app.post("/player/end turn", tags=["Player Methods"])
 async def end_turn(player_name, game_name):
     """A function which ends the turn of the selected player in the selected game.
     Args: \n
@@ -305,7 +313,7 @@ async def end_turn(player_name, game_name):
 # Gives a number to a player
 
 
-@app.post("/player/dice_number")
+@app.post("/player/dice_number", tags=["Player Methods"])
 async def dice_number(player_name, game_name):
     """The function generates a random dice number for the player.
 
@@ -334,7 +342,7 @@ async def dice_number(player_name, game_name):
 # Shows Player
 
 
-@app.get("/player/show_players")
+@app.get("/player/show_players", tags=["Player Methods"])
 async def show_players(game_name):
     """Returns the active players and their inner values.
 
@@ -355,7 +363,7 @@ async def show_players(game_name):
 # Generate Envelope
 
 
-@app.post("/cards/envelope")
+@app.post("/cards/envelope", tags=["Cards Methods"])
 async def select_envelope(game_name):
     """Selects The Moster, Victim and Room that will go in the envelope
     Args: \n
@@ -370,7 +378,7 @@ async def select_envelope(game_name):
 # Distribute Cards
 
 
-@app.post("/cards/distribute_cards")
+@app.post("/cards/distribute_cards", tags=["Cards Methods"])
 async def distribute_cards(a_game: str):
     player_with_monsters(a_game)
     player_with_rooms(a_game)

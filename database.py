@@ -1,4 +1,3 @@
-from types import CodeType
 from pony.orm import *
 import sqlite3
 import random
@@ -11,7 +10,7 @@ db.bind(provider="sqlite", filename="db.mystery", create_db=True)
 # Games table and Functions
 class User(db.Entity):
     username = pony.orm.Required(str, unique=True)
-    player = Optional("Player", cascade_delete=True)
+    player = Optional("Player")
 
 
 # Player Table
@@ -33,6 +32,7 @@ class Player(db.Entity):
 class Game(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
+    host_name = Required(str)
     is_started = Required(bool)
     is_full = Required(bool)
     num_players = Required(int)
@@ -43,8 +43,6 @@ class Game(db.Entity):
 
 
 # Game Cards
-
-
 class Cards_Monsters(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
@@ -59,7 +57,7 @@ class Cards_Victims(db.Entity):
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
-    game = Required("Game")
+    game = Optional("Game")
     player = Optional(Player)
 
 
@@ -67,44 +65,24 @@ class Cards_Rooms(db.Entity):
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
-    game = Required("Game")
+    game = Optional("Game")
     player = Optional(Player)
 
 
 db.generate_mapping(create_tables=True)
 
-
+# ----------------------------------------- GAME -----------------------------------------
 @db_session
-def new_game(new_name):
-    Game(name=new_name, is_started=False, is_full=False, num_players=0)
-
-
-@db_session
-def game_delete(un_game):
-    game = Game.get(name=un_game)
-    Game.delete(game)
+def new_game(new_name, creator):
+    Game(
+        name=new_name, host_name=creator, is_started=False, is_full=False, num_players=0
+    )
 
 
 @db_session
 def game_exist(un_name):
     if Game.get(name=un_name) is not None:
         return True
-
-
-@db_session
-def new_user(new_name):
-    User(username=new_name)
-
-
-@db_session
-def user_exist(a_name):
-    if User.get(username=a_name) is not None:
-        return True
-
-
-@db_session
-def get_user(a_user):
-    return User.get(username=a_user)
 
 
 @db_session
@@ -125,8 +103,8 @@ def is_full(the_game):
 
 
 @db_session
-def is_started(a_game):
-    return Game.get(name=a_game).is_started
+def is_started(a_name):
+    return Game.get(name=a_name).is_started
 
 
 @db_session
@@ -152,10 +130,72 @@ def get_game_host(a_game):
 
 
 @db_session
-def insert_player(un_game, un_player):
-    player = Player.get(name=un_player)
-    game = get_game(un_game)
-    game.Players.add(player)
+def get_all_games():
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_games = """SELECT * from Game"""
+        cursor.execute(select_games)
+        records = cursor.fetchall()
+        gamesList = []
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("name: ", row[2])
+            print("is_started: ", row[3])
+            print("is_full: ", row[4])
+            print("num_players: ", row[5])
+            print("\n")
+            games = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            gamesList.append(games)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return gamesList
+
+
+@db_session
+def start_game(game):
+    my_game = get_game(game)
+    my_game.set(is_started=True)
+
+
+@db_session
+def delete_game(game_name):
+    game = get_game(game_name)
+    Game.delete(game)
+
+
+# ----------------------------------------- USER -----------------------------------------
+
+
+@db_session
+def new_user(new_name):
+    User(username=new_name)
+
+
+@db_session
+def user_exist(a_name):
+    if User.get(username=a_name) is not None:
+        return True
+
+
+@db_session
+def get_user(a_user):
+    return User.get(username=a_user)
+
+
+@db_session
+def delete_user(user_name):
+    user = get_user(user_name)
+    User.delete(user)
+
+
+# ----------------------------------------- PLAYER -----------------------------------------
 
 
 @db_session
@@ -230,46 +270,6 @@ def get_all_players():
 
 
 @db_session
-def get_all_games():
-    try:
-        conn = sqlite3.connect("db.mystery")
-        cursor = conn.cursor()
-        print("\n")
-        select_games = """SELECT * from Game"""
-        cursor.execute(select_games)
-        records = cursor.fetchall()
-        gamesList = []
-        for row in records:
-            print("id: ", row[0])
-            print("name: ", row[1])
-            print("is_started: ", row[2])
-            print("is_full: ", row[3])
-            print("num_players: ", row[4])
-            print("\n")
-            games = [
-                row[0],
-                row[1],
-                row[2],
-                row[3],
-                row[4],
-            ]
-            gamesList.append(games)
-            cursor.close()
-    except sqlite3.Error as error:
-        print("Failed to read data from sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-    return gamesList
-
-
-@db_session
-def start_game(game):
-    my_game = get_game(game)
-    my_game.set(is_started=True)
-
-
-@db_session
 def get_player_order(player):
     return Player.get(name=player).order
 
@@ -278,7 +278,6 @@ def get_player_order(player):
 def random_number_dice(player):
     myPlayer = Player.get(name=player)
     myPlayer.set(dice_number=random.randint(1, 6))
-    return myPlayer.dice_number
 
 
 @db_session
@@ -306,19 +305,104 @@ def player_is_in_turn(player):
 
 
 @db_session
-def delete_game(game_name):
-    game = get_game(game_name)
-    Game.delete(game)
+def insert_player(un_game, un_player):
+    player = Player.get(name=un_player)
+    game = get_game(un_game)
+    game.Players.add(player)
+
+
+# ----------------------------------------- CARDS -----------------------------------------
 
 
 @db_session
-def delete_user(user_name):
-    user = get_user(user_name)
-    User.delete(user)
+def generate_cards_monsters_list():
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_player = """SELECT * from Cards_Monsters"""
+        cursor.execute(select_player)
+        records = cursor.fetchall()
+        monsters_list = []
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("is_in_use: ", row[2])
+            print("is_in_envelope: ", row[3])
+            print("game: ", row[4])
+            print("player: ", row[5])
+            print("\n")
+            monsters = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            monsters_list.append(monsters)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return monsters_list
 
 
 @db_session
-def generate_cards(game_name):
+def generate_cards_monsters_list():
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_player = """SELECT * from Cards_Victims"""
+        cursor.execute(select_player)
+        records = cursor.fetchall()
+        victims_list = []
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("is_in_use: ", row[2])
+            print("is_in_envelope: ", row[3])
+            print("game: ", row[4])
+            print("player: ", row[5])
+            print("\n")
+            victims = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            victims_list.append(victims)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return victims_list
+
+
+@db_session
+def generate_cards_monsters_list():
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_player = """SELECT * from Cards_Rooms"""
+        cursor.execute(select_player)
+        records = cursor.fetchall()
+        rooms_list = []
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("is_in_use: ", row[2])
+            print("is_in_envelope: ", row[3])
+            print("game: ", row[4])
+            print("player: ", row[5])
+            print("\n")
+            rooms = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            rooms_list.append(rooms)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return rooms_list
+
+
+@db_session
+def generate_cards():
     cards_monster = [
         "Dŕacula",
         "Frankenstein",
@@ -353,7 +437,6 @@ def generate_cards(game_name):
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
-            game=get_game(game_name),
         )
 
     p = 0
@@ -363,7 +446,6 @@ def generate_cards(game_name):
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
-            game=get_game(game_name),
         )
 
     p = 0
@@ -373,7 +455,6 @@ def generate_cards(game_name):
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
-            game=get_game(game_name),
         )
 
 
@@ -429,11 +510,6 @@ def get_card_room(card):
 @db_session
 def get_card_victims(card):
     return Cards_Victims.get(name=card)
-
-
-@db_session
-def get_player_order(a_player):
-    return Player.get(name=a_player).order
 
 
 @db_session

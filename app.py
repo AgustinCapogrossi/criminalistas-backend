@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi import Depends, HTTPException, status
+from typing import List
+from fastapi.responses import HTMLResponse
 from database import *
 from pydantic_models import *
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,9 +11,17 @@ MIN_LEN_NAME_GAME = 3
 MAX_LEN_NAME_NICK = 10
 MIN_LEN_NAME_NICK = 3
 
-app = FastAPI(title="mystery")
 
 origins = ["http://localhost:3000", "localhost:3000"]
+tags_metadata = [
+    {"name": "User Methods", "description": "Gets all User Methods"},
+    {"name": "Game Methods", "description": "Gets all Game Methods"},
+    {"name": "Player Methods", "description": "Gets all Player Methods"},
+    {"name": "Cards Methods", "description": "Gets all Cards Methods"},
+]
+
+app = FastAPI(openapi_tags=tags_metadata)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,20 +30,37 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# ----------------------------------------- WEBSOCKET -----------------------------------------
+class ConnectionManager:
+    def __init__(self):
+        self.connections: List[WebSocket] = []
 
-tags_metadata = [
-    {"name": "User Methods", "description": "Gets all User Methods"},
-    {"name": "Game Methods", "description": "Gets all Game Methods"},
-    {"name": "Turn Methods", "description": "Gets all Turn Methods"},
-    {"name": "Player Methods", "description": "Gets all PLayer Methods"},
-]
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.connections.append(websocket)
 
-app = FastAPI(openapi_tags=tags_metadata)
-
-# creating a nickname/user
+    async def broadcast(self, data: str):
+        for connection in self.connections:
+            await connection.send_text(data)
 
 
-@app.post("/user/creationuser", tags= ["User Methods"])
+manager = ConnectionManager()
+
+
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int):
+    await manager.connect(websocket)
+    while True:
+        data = await websocket.receive_text()
+        await manager.broadcast(f"Client {client_id}: {data}")
+
+
+# ----------------------------------------- USER -----------------------------------------
+
+# Creates a Nickname
+
+
+@app.post("/user/creationuser", tags=["User Methods"])
 async def user_creation(user_to_create: str):
     """It creates a new user and allocates it in the database.
 
@@ -60,13 +87,38 @@ async def user_creation(user_to_create: str):
         return {"user": user_to_create}
 
 
-# creating a game
+# Deletes User
 
 
-@app.post("/game/creationgame" , tags=["Game Methods"])
-async def game_creation(
-    game_name: str, num_players: str, is_started: bool, is_full: bool, game_creator: str
-):
+@app.delete("/user/delete_user", tags=["User Methods"])
+async def user_delete(user_name: str):
+    """Deletes an user.
+
+    Args: \n
+        user_name (str): Name of the user to delete. \n
+    Raises: \n
+        HTTPException: The user does not exist. \n
+    Returns: \n
+        str: Verification text.
+    """
+    if not user_exist(user_name):
+        raise HTTPException(status_code=404, detail="user doesn't exist")
+    elif player_exist(user_name):
+        player_delete(user_name)
+        delete_user(user_name)
+        return {"player and user successfully deleted"}
+    else:
+        delete_user(user_name)
+        return {"user successfully deleted"}
+
+
+# ----------------------------------------- GAME -----------------------------------------
+
+# Creates a Game
+
+
+@app.post("/game/creationgame", tags=["Game Methods"])
+async def game_creation(game_name: str, game_creator: str):
     """It creates a new game and allocates it within the database.\n
 
     Args: \n
@@ -98,14 +150,14 @@ async def game_creation(
     else:
         is_full = False
         is_started = False
-        new_game(game_name)
+        new_game(game_name, game_creator)
         new_player_host(game_creator, game_name)
         insert_player(game_name, game_creator)
         add_player(game_name)
         return {"game": game_name}
 
 
-# joining a game
+# Joins a Game
 
 
 @app.post("/game/joingame", tags=["Game Methods"])
@@ -121,7 +173,6 @@ async def join_game(game_to_play: str, user_to_play: str):
         HTTPException: The game is full. \n
         HTTPException: The game is not available. \n
         HTTPException: The user is already in the game. \n
-        HTTPException: The user does not exist. \n
 
     Returns: \n
         str: Verification text.
@@ -133,7 +184,7 @@ async def join_game(game_to_play: str, user_to_play: str):
     elif is_started(game_to_play):
         raise HTTPException(status_code=404, detail="game is not available")
     elif player_exist(user_to_play):
-        raise HTTPException(status_code=404, detail="user in game")
+        raise HTTPException(status_code=404, detail="player in game")
     elif not user_exist(user_to_play):
         raise HTTPException(status_code=404, detail="user does not exist")
     else:
@@ -143,15 +194,16 @@ async def join_game(game_to_play: str, user_to_play: str):
         return {"joining game": game_to_play}
 
 
-# exit game
+# Exits a Game
 
 
-@app.delete("/player/exitgame" , tags=["Player Methods"])
+@app.delete("/game/exitgame", tags=["Game Methods"])
 async def exitgame(player_to_exit: str):
     """It allows a player to leave the game.
 
     Args: \n
         player_to_exit (str): Name of the player who is exiting the game. \n
+        game_to_exit (str): Name of the game from which the player is exiting. \n
 
     Raises: \n
         HTTPException: The player does not exist. \n
@@ -166,10 +218,10 @@ async def exitgame(player_to_exit: str):
         return {"exit game"}
 
 
-# starting a game
+# Starts a Game
 
 
-@app.post("/game/start_game" , tags=["Game Methods"])
+@app.post("/game/start_game", tags=["Game Methods"])
 async def start_the_game(game_to_start: str):
     """It switches the state of the selected game to started.
 
@@ -187,18 +239,30 @@ async def start_the_game(game_to_start: str):
     if is_started(game_to_start):
         raise HTTPException(status_code=404, detail="game is already started")
     elif get_number_player(game_to_start) < 2:
-        raise HTTPException(status_code=404, detail="not enoght players to start game")
+        raise HTTPException(status_code=404, detail="not enough players to start game")
     elif not game_exist(game_to_start):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:
         start_game(game_to_start)
         host_name = get_game_host(game_to_start)
         enable_turn_to_player(host_name)
-        generate_cards(game_to_start)
     return {"game started"}
 
 
-# show games
+# Generate Cards
+
+
+@app.post("/game/cards_generation", tags=["Game Methods"])
+async def cards_generation(game_to_start: str):
+    """Creates tables in the database for each card suit.
+
+    Args:
+        game_to_start (str): Name of the game
+    """
+    generate_cards(game_to_start)
+
+
+# Shows Games
 
 
 @app.get("/game/show_available_games", tags=["Game Methods"])
@@ -212,77 +276,46 @@ async def show_games():
     return my_list
 
 
-# show player
+# Delete Game
 
 
-@app.get("/player/show_players", tags=["Player Methods"])
-async def show_players(game_name):
-    """Returns the active players and their inner values.
-
-    Returns: \n
-        my_list: A list containing the active players and their inner values. \n
-    """
-    my_list = get_all_players()
-    my_new_list = []
-    game_id = get_game_id(game_name)
-    for i in range(0, len(my_list), 1):
-        if my_list[i][4] == game_id:
-            my_new_list.append(my_list[i])
-    return my_new_list
-
-
-# start turn
-
-
-@app.post("/turn/start turn" , tags=["Turn Methods"])
-async def start_turn(player_name, game_name):
-    """A function which starts the turn of the selected player in the selected game.
+@app.delete("/game/delete_game", tags=["Game Methods"])
+async def delete_a_game(game_name: str):
+    """Deletes an empty game.
 
     Args: \n
-        player_name (str): Name of the player whose turn we want to start. \n
-        game_name (str): Name of the game in which the player is currently playing. \n
-
+        game_name (str): Name of the game to delete. \n
     Raises: \n
-        HTTPException: The specified game is not started. \n
-        HTTPException: The selected player's turn is ongoing. \n
-        HTTPException: The selected player does not exist. \n
-        HTTPException: The selected game does not exist. \n
+        HTTPException: The game does not exist. \n
+        HTTPException: The game has at least one player in it. \n
+    Returns: \n
+        str: Verification text.
     """
-    if (
-        player_exist(player_name)
-        and game_exist(game_name)
-        and not player_is_in_turn(player_name)
-        and is_started(game_name)
-    ):
-        enable_turn_to_player(player_name)
-    elif not is_started(game_name):
-        raise HTTPException(status_code=404, detail="game has not started yet")
-    elif player_is_in_turn(player_name):
-        raise HTTPException(status_code=404, detail="player is already in turn")
-    elif not player_exist(player_name):
-        raise HTTPException(status_code=404, detail="player doesn't exist")
-    elif not game_exist(game_name):
+    if not game_exist(game_name):
         raise HTTPException(status_code=404, detail="game doesn't exist")
-    return {"Turn started"}
+    elif get_number_player(game_name) > 0:
+        raise HTTPException(status_code=404, detail="game has players in it")
+    else:
+        delete_game(game_name)
+        return {"game successfully deleted"}
 
 
-# end turn
+# ----------------------------------------- PLAYER -----------------------------------------
+
+# Ends Turn
 
 
-@app.post("/turn/end turn" , tags=["Turn Methods"])
+@app.post("/player/end turn", tags=["Player Methods"])
 async def end_turn(player_name, game_name):
     """A function which ends the turn of the selected player in the selected game.
-
     Args: \n
         player_name (str): Name of the player whose turn we want to end. \n
         game_name (str): Name of the game in which the player is currently playing. \n
-
     Raises: \n
         HTTPException: The specified game is not started. \n
         HTTPException: The selected player's turn is not ongoing. \n
         HTTPException: The selected player does not exist. \n
         HTTPException: The selected game does not exist. \n
-
     Returns: \n
         str: Verification text.
     """
@@ -315,7 +348,7 @@ async def end_turn(player_name, game_name):
         raise HTTPException(status_code=404, detail="game doesn't exist")
 
 
-# gives a number to a player
+# Gives a number to a player
 
 
 @app.post("/player/dice_number", tags=["Player Methods"])
@@ -328,9 +361,6 @@ async def dice_number(player_name, game_name):
 
     Raises: \n
         HTTPException: The selected player does not exist. \n
-        HTTPException: The selected game does not exist. \n
-        HTTPException: The selected game is not started. \n
-        HTTPException: The selected player isn't in turn. \n
 
     Returns: \n
         str: Verification text.
@@ -342,117 +372,53 @@ async def dice_number(player_name, game_name):
         and player_is_in_turn(player_name)
     ):
         random_number_dice(player_name)
-        return {"number succesfully generated to player"}
-    elif not player_exist(player_name):
+        return {"number successfully generated to player"}
+    else:
         raise HTTPException(status_code=404, detail="player doesn't exist")
-    elif(not game_exist(game_name)):
-        raise HTTPException(status_code=404, detail="game doesn't exist")
-    elif(not is_started(game_name)):
-        raise HTTPException(status_code=404, detail="game is not started")
-    elif(is_started(game_name) and not player_is_in_turn(game_name)):
-        raise HTTPException(status_code=404, detail="player isn't in turn")
-    
 
 
-#Show Player
+# Shows Player
+
 
 @app.get("/player/show_players", tags=["Player Methods"])
-async def show_players():
+async def show_players(game_name):
     """Returns the active players and their inner values.
 
     Returns: \n
         my_list: A list containing the active players and their inner values. \n
     """
     my_list = get_all_players()
-    return my_list
+    my_new_list = []
+    game_id = get_game_id(game_name)
+    for i in range(0, len(my_list), 1):
+        if my_list[i][4] == game_id:
+            my_new_list.append(my_list[i])
+    return my_new_list
 
 
-#Delete Game
+# ----------------------------------------- CARDS -----------------------------------------
 
-@app.delete("/game/delete_game", tags=["Game Methods"])
-async def delete_a_game(game_name : str):
-    """Deletes an empty game.
-    
-    Args: \n
-        game_name (str): Name of the game to delete. \n
-
-    Raises: \n
-        HTTPException: The game does not exist. \n
-        HTTPException: The game has at least one player in it. \n
-
-    Returns: \n
-        str: Verification text.
-    """
-    if (not game_exist(game_name)):
-        raise HTTPException(status_code=404, detail="game doesn't exist")
-    elif (get_number_player(game_name)>0):
-        raise HTTPException(status_code=404, detail="game has players in it")
-    else:
-        game_delete(game_name)
-        return{"game successfully deleted"}
-
-# Delete User
-
-@app.delete("/user/delete_user", tags=["User Methods"])
-async def user_delete(user_name : str):
-    """Deletes an user.
-    
-    Args: \n
-        user_name (str): Name of the user to delete. \n
-
-    Raises: \n
-        HTTPException: The user does not exist. \n
-
-    Returns: \n
-        str: Verification text.
-    """
-    if(not user_exist(user_name)):
-        raise HTTPException(status_code=404, detail="user doesn't exist")
-    elif (player_exist(user_name)):
-        player_delete(user_name)
-        delete_user(user_name)
-        
-        return{"player and user successfully deleted"}
-    else:
-        delete_user(user_name)
-        return{"user successfully deleted"}
+# Generate Envelope
 
 
-#Generate Cards
-
-@app.post("/game/generate_cards", tags= ["Game Methods"])
-async def cards_generator(game):
-    """Generate the game cards.
-    
-    Args: \n
-        cards_generator (str): Name of the game to generate cards. \n
-
-    Returns: \n
-        str: Verification text.
-    """
-    generate_cards(game)
-    return{"Cards Successfully generated for the game"}
-
-#Generate Envelope
-
-@app.post("/game/envelope", tags=["Game Methods"])
+@app.post("/cards/envelope", tags=["Cards Methods"])
 async def select_envelope(game_name):
     """Selects The Moster, Victim and Room that will go in the envelope
-
     Args: \n
         select_envelope (str): Name of the game to select the cards. \n
-    
     Returns: \n
         str: Verification text.
     """
     envelope(game_name)
     return {"Monster, Victim and Room Successfully selected."}
 
-#Distruibute Cards
 
-@app.post("/turn/distribute_cards", tags=["Turn Methods"])
+# Distribute Cards
+
+
+@app.post("/cards/distribute_cards", tags=["Cards Methods"])
 async def distribute_cards(a_game: str):
     player_with_monsters(a_game)
     player_with_rooms(a_game)
     player_with_victims(a_game)
-    return{"cards distributes"}
+    return {"cards distributes"}

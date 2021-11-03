@@ -38,9 +38,9 @@ class Game(db.Entity):
     is_full = Required(bool)
     num_players = Required(int)
     Players = Set("Player", cascade_delete=True)
-    cards_monsters = Set("Cards_Monsters")
-    cards_rooms = Set("Cards_Rooms")
-    cards_victims = Set("Cards_Victims")
+    cards_monsters = Set("Cards_Monsters", cascade_delete=True)
+    cards_rooms = Set("Cards_Rooms", cascade_delete=True)
+    cards_victims = Set("Cards_Victims", cascade_delete=True)
 
 
 # Game Cards

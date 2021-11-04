@@ -44,7 +44,6 @@ class Game(db.Entity):
 
 # Game Cards
 class Cards_Monsters(db.Entity):
-    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
@@ -53,7 +52,6 @@ class Cards_Monsters(db.Entity):
 
 
 class Cards_Victims(db.Entity):
-    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
@@ -317,7 +315,7 @@ def insert_player(un_game, un_player):
 
 
 @db_session
-def generate_cards():
+def generate_cards(game_name):
     cards_monster = [
         "Dŕacula",
         "Frankenstein",
@@ -352,6 +350,7 @@ def generate_cards():
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
+            game=get_game(game_name)
         )
 
     p = 0
@@ -361,6 +360,7 @@ def generate_cards():
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
+            game=get_game(game_name)
         )
 
     p = 0
@@ -370,6 +370,7 @@ def generate_cards():
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
+            game=get_game(game_name)
         )
 
 
@@ -511,3 +512,4 @@ def player_with_victims(a_game):
     finally:
         if conn:
             conn.close()
+

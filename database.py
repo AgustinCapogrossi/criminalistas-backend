@@ -57,7 +57,7 @@ class Cards_Victims(db.Entity):
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
-    game = Required("Game")
+    game = Optional("Game")
     player = Optional(Player)
 
 
@@ -65,7 +65,7 @@ class Cards_Rooms(db.Entity):
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
-    game = Required("Game")
+    game = Optional("Game")
     player = Optional(Player)
 
 
@@ -275,6 +275,30 @@ def get_player_order(player):
 
 
 @db_session
+def set_player_order(player, new_order):
+    my_player = Player.get(name=player)
+    my_player.set(order=new_order)
+
+
+@db_session
+def player_is_host(player):
+    return Player.get(name=player).host
+
+
+@db_session
+def player_set_host(player):
+    my_player = Player.get(name=player)
+    my_player.set(host=True)
+    my_player.game.set(host_name=player)
+
+
+@db_session
+def get_player_game(un_player):
+    player = Player.get(name=un_player)
+    return player.game.id
+
+
+@db_session
 def random_number_dice(player):
     myPlayer = Player.get(name=player)
     myPlayer.set(dice_number=random.randint(1, 6))
@@ -313,9 +337,11 @@ def insert_player(un_game, un_player):
 
 # ----------------------------------------- CARDS -----------------------------------------
 
+# Generate Cards
+
 
 @db_session
-def generate_cards(game_name):
+def generate_cards():
     cards_monster = [
         "Dŕacula",
         "Frankenstein",
@@ -350,7 +376,6 @@ def generate_cards(game_name):
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
-            game=get_game(game_name),
         )
 
     p = 0
@@ -360,7 +385,6 @@ def generate_cards(game_name):
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
-            game=get_game(game_name),
         )
 
     p = 0
@@ -370,7 +394,6 @@ def generate_cards(game_name):
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
-            game=get_game(game_name),
         )
 
 
@@ -426,11 +449,6 @@ def get_card_room(card):
 @db_session
 def get_card_victims(card):
     return Cards_Victims.get(name=card)
-
-
-@db_session
-def get_player_order(a_player):
-    return Player.get(name=a_player).order
 
 
 @db_session

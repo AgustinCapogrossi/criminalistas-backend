@@ -51,7 +51,6 @@ class Cards_Monsters(db.Entity):
     game = Optional("Game")
     player = Optional(Player)
 
-
 class Cards_Victims(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
@@ -59,7 +58,6 @@ class Cards_Victims(db.Entity):
     is_in_envelope = Required(bool)
     game = Optional("Game")
     player = Optional(Player)
-
 
 class Cards_Rooms(db.Entity):
     name = Required(str)

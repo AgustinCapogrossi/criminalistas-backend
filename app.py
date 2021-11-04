@@ -237,6 +237,9 @@ async def exitgame(player_to_exit: str):
                 if my_new_list[i][5] == order + 1:
                     enable_turn_to_player(my_new_list[i][1])
         player_delete(player_to_exit)
+        if get_number_player(get_game_name(game_id)) == 0:
+            delete_game(get_game_name(game_id))
+            
         return {"exit game"}
 
 
@@ -268,6 +271,7 @@ async def start_the_game(game_to_start: str):
         start_game(game_to_start)
         host_name = get_game_host(game_to_start)
         enable_turn_to_player(host_name)
+        generate_cards(game_to_start)
     return {"game started"}
 
 

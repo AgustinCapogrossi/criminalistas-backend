@@ -51,7 +51,6 @@ class Cards_Monsters(db.Entity):
     game = Optional("Game")
     player = Optional(Player)
 
-
 class Cards_Victims(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
@@ -59,7 +58,6 @@ class Cards_Victims(db.Entity):
     is_in_envelope = Required(bool)
     game = Optional("Game")
     player = Optional(Player)
-
 
 class Cards_Rooms(db.Entity):
     name = Required(str)
@@ -122,6 +120,11 @@ def get_game(a_game):
 @db_session
 def get_game_id(a_game):
     return Game.get(name=a_game).id
+
+
+@db_session
+def get_game_name(game_id):
+    return Game.get(id=game_id).name
 
 
 @db_session
@@ -275,6 +278,30 @@ def get_player_order(player):
 
 
 @db_session
+def set_player_order(player, new_order):
+    my_player = Player.get(name=player)
+    my_player.set(order=new_order)
+
+
+@db_session
+def player_is_host(player):
+    return Player.get(name=player).host
+
+
+@db_session
+def player_set_host(player):
+    my_player = Player.get(name=player)
+    my_player.set(host=True)
+    my_player.game.set(host_name=player)
+
+
+@db_session
+def get_player_game(un_player):
+    player = Player.get(name=un_player)
+    return player.game.id
+
+
+@db_session
 def random_number_dice(player):
     myPlayer = Player.get(name=player)
     myPlayer.set(dice_number=random.randint(1, 6))
@@ -350,6 +377,7 @@ def generate_cards():
         card_name = cards_monster[p]
         Cards_Monsters(
             name=card_name,
+            game=get_game(game_name),
             is_in_use=False,
             is_in_envelope=False,
         )
@@ -359,6 +387,7 @@ def generate_cards():
         card_name = cards_victims[p]
         Cards_Victims(
             name=card_name,
+            game=get_game(game_name),
             is_in_use=False,
             is_in_envelope=False,
         )
@@ -368,6 +397,7 @@ def generate_cards():
         card_name = cards_rooms[p]
         Cards_Rooms(
             name=card_name,
+            game=get_game(game_name),
             is_in_use=False,
             is_in_envelope=False,
         )

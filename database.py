@@ -125,6 +125,11 @@ def get_game_id(a_game):
 
 
 @db_session
+def get_game_name(game_id):
+    return Game.get(id=game_id).name
+
+
+@db_session
 def get_game_host(a_game):
     return Game.get(name=a_game).host_name
 
@@ -374,6 +379,7 @@ def generate_cards():
         card_name = cards_monster[p]
         Cards_Monsters(
             name=card_name,
+            game=get_game(game_name),
             is_in_use=False,
             is_in_envelope=False,
         )
@@ -383,6 +389,7 @@ def generate_cards():
         card_name = cards_victims[p]
         Cards_Victims(
             name=card_name,
+            game=get_game(game_name),
             is_in_use=False,
             is_in_envelope=False,
         )
@@ -392,6 +399,7 @@ def generate_cards():
         card_name = cards_rooms[p]
         Cards_Rooms(
             name=card_name,
+            game=get_game(game_name),
             is_in_use=False,
             is_in_envelope=False,
         )

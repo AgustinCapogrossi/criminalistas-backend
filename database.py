@@ -344,7 +344,7 @@ def insert_player(un_game, un_player):
 
 
 @db_session
-def generate_cards():
+def generate_cards(game_name):
     cards_monster = [
         "Dŕacula",
         "Frankenstein",

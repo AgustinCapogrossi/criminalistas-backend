@@ -44,6 +44,7 @@ class Game(db.Entity):
 
 # Game Cards
 class Cards_Monsters(db.Entity):
+    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
@@ -52,6 +53,7 @@ class Cards_Monsters(db.Entity):
 
 
 class Cards_Victims(db.Entity):
+    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
@@ -60,6 +62,7 @@ class Cards_Victims(db.Entity):
 
 
 class Cards_Rooms(db.Entity):
+    id = PrimaryKey(int, auto=True)
     name = Required(str)
     is_in_use = Required(bool)
     is_in_envelope = Required(bool)
@@ -370,7 +373,7 @@ def generate_cards(game_name):
             name=card_name,
             is_in_use=False,
             is_in_envelope=False,
-            game=get_game(game_name)
+            game = get_game(game_name)
         )
 
 
@@ -406,8 +409,8 @@ def envelope(game):
 
 
 @db_session
-def get_card_monster(card):
-    return Cards_Monsters.get(name=card)
+def get_card_monster(card_id):
+    return Cards_Monsters.get(id=card_id)
 
 
 @db_session
@@ -419,13 +422,13 @@ def player_delete(un_player):
 
 
 @db_session
-def get_card_room(card):
-    return Cards_Rooms.get(name=card)
+def get_card_room(id_card):
+    return Cards_Rooms.get(id=id_card)
 
 
 @db_session
-def get_card_victims(card):
-    return Cards_Victims.get(name=card)
+def get_card_victims(id_card):
+    return Cards_Victims.get(id=id_card)
 
 
 @db_session
@@ -436,20 +439,22 @@ def get_card_game(card):
 @db_session
 def player_with_monsters(a_game):
     num_player = get_number_player(a_game)
+    game_id = get_game_id(a_game)
     try:
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = """SELECT * from Cards_Monsters"""
+        select_card = ("""SELECT * from Cards_Monsters WHERE `game` = %d """ % game_id)
+        print(select_card)
         cursor.execute(select_card)
         records = cursor.fetchall()
         for row in records:
-            name = row[1]
+            id_card = row[0]
             game = row[4]
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
                 player_random = random.randint(1, num_player)
-                card = get_card_monster(name)
+                card = get_card_room(id_card)
                 card.set(player=player_random)
                 card.set(is_in_use=True)
                 cursor.close()
@@ -463,20 +468,21 @@ def player_with_monsters(a_game):
 @db_session
 def player_with_rooms(a_game):
     num_player = get_number_player(a_game)
+    game_id = get_game_id(a_game)
     try:
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = """SELECT * from Cards_Rooms"""
+        select_card = ("""SELECT * from Cards_Rooms WHERE `game` = 1 """)
         cursor.execute(select_card)
         records = cursor.fetchall()
         for row in records:
-            name = row[1]
+            id_card = row[0]
             game = row[4]
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
                 player_random = random.randint(1, num_player)
-                card = get_card_room(name)
+                card = get_card_room(id_card)
                 card.set(player=player_random)
                 card.set(is_in_use=True)
                 cursor.close()
@@ -490,20 +496,21 @@ def player_with_rooms(a_game):
 @db_session
 def player_with_victims(a_game):
     num_player = get_number_player(a_game)
+    game_id = get_game_id(a_game)
     try:
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = """SELECT * from Cards_Victims"""
+        select_card = ("""SELECT * from Cards_Victims WHERE `game` = 1 """)
         cursor.execute(select_card)
         records = cursor.fetchall()
         for row in records:
-            name = row[1]
+            id_card = row[0]
             game = row[4]
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
                 player_random = random.randint(1, num_player)
-                card = get_card_victims(name)
+                card = get_card_victims(id_card)
                 card.set(player=player_random)
                 card.set(is_in_use=True)
                 cursor.close()
@@ -512,4 +519,3 @@ def player_with_victims(a_game):
     finally:
         if conn:
             conn.close()
-

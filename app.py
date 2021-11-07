@@ -275,19 +275,6 @@ async def start_the_game(game_to_start: str):
     return {"game started"}
 
 
-# Generate Cards
-
-
-@app.post("/game/cards_generation", tags=["Game Methods"])
-async def cards_generation(game_to_start: str):
-    """Creates tables in the database for each card suit.
-
-    Args:
-        game_to_start (str): Name of the game
-    """
-    generate_cards(game_to_start)
-
-
 # Shows Games
 
 
@@ -444,7 +431,10 @@ async def select_envelope(game_name):
 
 @app.post("/cards/distribute_cards", tags=["Cards Methods"])
 async def distribute_cards(a_game: str):
-    player_with_monsters(a_game)
-    player_with_rooms(a_game)
-    player_with_victims(a_game)
+    if not game_exist(a_game):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
+    else:
+        player_with_monsters(a_game)
+        player_with_rooms(a_game)
+        player_with_victims(a_game)
     return {"cards distributes"}

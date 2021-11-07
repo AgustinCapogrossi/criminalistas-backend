@@ -37,9 +37,9 @@ class Game(db.Entity):
     is_full = Required(bool)
     num_players = Required(int)
     Players = Set("Player", cascade_delete=True)
-    cards_monsters = Set("Cards_Monsters")
-    cards_rooms = Set("Cards_Rooms")
-    cards_victims = Set("Cards_Victims")
+    cards_monsters = Set("Cards_Monsters", cascade_delete=True)
+    cards_rooms = Set("Cards_Rooms", cascade_delete=True)
+    cards_victims = Set("Cards_Victims", cascade_delete=True)
 
 
 # Game Cards
@@ -409,8 +409,8 @@ def envelope(game):
 
 
 @db_session
-def get_card_monster(card_id):
-    return Cards_Monsters.get(id=card_id)
+def get_card_monster(id_card):
+    return Cards_Monsters.get(id=id_card)
 
 
 @db_session
@@ -444,7 +444,7 @@ def player_with_monsters(a_game):
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = ("""SELECT * from Cards_Monsters WHERE `game` = %d """ % game_id)
+        select_card = ("""SELECT * from Cards_Monsters WHERE `game` = %d""" % game_id)
         print(select_card)
         cursor.execute(select_card)
         records = cursor.fetchall()
@@ -454,7 +454,7 @@ def player_with_monsters(a_game):
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
                 player_random = random.randint(1, num_player)
-                card = get_card_room(id_card)
+                card = get_card_monster(id_card)
                 card.set(player=player_random)
                 card.set(is_in_use=True)
                 cursor.close()
@@ -473,7 +473,7 @@ def player_with_rooms(a_game):
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = ("""SELECT * from Cards_Rooms WHERE `game` = 1 """)
+        select_card = ("""SELECT * from Cards_Rooms WHERE `game` = %d """ % game_id)
         cursor.execute(select_card)
         records = cursor.fetchall()
         for row in records:
@@ -501,7 +501,7 @@ def player_with_victims(a_game):
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = ("""SELECT * from Cards_Victims WHERE `game` = 1 """)
+        select_card = ("""SELECT * from Cards_Victims WHERE `game` = %d """ % game_id)
         cursor.execute(select_card)
         records = cursor.fetchall()
         for row in records:

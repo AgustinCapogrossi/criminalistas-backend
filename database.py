@@ -435,6 +435,22 @@ def get_card_victims(id_card):
 def get_card_game(card):
     return Cards_Monsters.get(name=card).game
 
+@db_session
+def get_player_random(game):
+    game_id = get_game_id(game)
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        player_random = ("SELECT id from Player WHERE `game` = %d ORDER BY RANDOM() LIMIT 1" % game_id)
+        cursor.execute(player_random)
+        records = cursor.fetchall()
+        id_player = records[0]
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return id_player
 
 @db_session
 def player_with_monsters(a_game):
@@ -445,7 +461,6 @@ def player_with_monsters(a_game):
         cursor = conn.cursor()
         print("\n")
         select_card = ("""SELECT * from Cards_Monsters WHERE `game` = %d""" % game_id)
-        print(select_card)
         cursor.execute(select_card)
         records = cursor.fetchall()
         for row in records:
@@ -453,7 +468,7 @@ def player_with_monsters(a_game):
             game = row[4]
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
-                player_random = random.randint(1, num_player)
+                player_random = get_player_random(a_game)
                 card = get_card_monster(id_card)
                 card.set(player=player_random)
                 card.set(is_in_use=True)
@@ -481,7 +496,7 @@ def player_with_rooms(a_game):
             game = row[4]
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
-                player_random = random.randint(1, num_player)
+                player_random = get_player_random(a_game)
                 card = get_card_room(id_card)
                 card.set(player=player_random)
                 card.set(is_in_use=True)
@@ -509,7 +524,7 @@ def player_with_victims(a_game):
             game = row[4]
             value = row[3]
             if (get_game_id(a_game) == game) and (value == 0):
-                player_random = random.randint(1, num_player)
+                player_random = get_player_random(a_game)
                 card = get_card_victims(id_card)
                 card.set(player=player_random)
                 card.set(is_in_use=True)

@@ -16,9 +16,8 @@ def test_create_user():
     rstr = get_random_string(8)
     register = client.post(
         "/creationuser",
-        headers={"user_to_create": "pepe"},
+        headers={"Content-Type": "application/json"},
         json={
-            "username": "german".format(rstr),
-        },
-    )
+            "username": "german"
+        })
     assert register.status_code == 200

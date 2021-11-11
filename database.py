@@ -54,6 +54,7 @@ class Cards_Monsters(db.Entity):
     game = Optional("Game")
     player = Optional(Player)
 
+
 class Cards_Victims(db.Entity):
     id = PrimaryKey(int, auto=True)
     name = Required(str)
@@ -61,6 +62,7 @@ class Cards_Victims(db.Entity):
     is_in_envelope = Required(bool)
     game = Optional("Game")
     player = Optional(Player)
+
 
 class Cards_Rooms(db.Entity):
     id = PrimaryKey(int, auto=True)
@@ -309,6 +311,7 @@ def get_player_game(un_player):
 def random_number_dice(player):
     myPlayer = Player.get(name=player)
     myPlayer.set(dice_number=random.randint(1, 6))
+    return myPlayer.dice_number
 
 
 @db_session
@@ -389,7 +392,6 @@ def generate_cards(game_name):
             game=get_game(game_name),
             is_in_use=False,
             is_in_envelope=False,
-            game=get_game(game_name)
         )
 
     p = 0
@@ -400,7 +402,6 @@ def generate_cards(game_name):
             game=get_game(game_name),
             is_in_use=False,
             is_in_envelope=False,
-            game=get_game(game_name)
         )
 
     p = 0
@@ -411,8 +412,10 @@ def generate_cards(game_name):
             game=get_game(game_name),
             is_in_use=False,
             is_in_envelope=False,
-            game = get_game(game_name)
         )
+
+
+# Generate envelope
 
 
 @db_session
@@ -473,13 +476,14 @@ def get_card_victims(id_card):
 def get_card_game(card):
     return Cards_Monsters.get(name=card).game
 
+
 @db_session
 def get_players(game):
     game_id = get_game_id(game)
     try:
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
-        player_random = ("SELECT id from Player WHERE `game` = %d" % game_id)
+        player_random = "SELECT id from Player WHERE `game` = %d" % game_id
         cursor.execute(player_random)
         records = cursor.fetchall()
         playerList = []
@@ -494,6 +498,7 @@ def get_players(game):
             conn.close()
     return playerList
 
+
 @db_session
 def player_with_monsters(a_game):
     game_id = get_game_id(a_game)
@@ -502,7 +507,7 @@ def player_with_monsters(a_game):
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = ("""SELECT * from Cards_Monsters WHERE `game` = %d""" % game_id)
+        select_card = """SELECT * from Cards_Monsters WHERE `game` = %d""" % game_id
         cursor.execute(select_card)
         records = cursor.fetchall()
         pl = 0
@@ -537,7 +542,7 @@ def player_with_rooms(a_game):
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = ("""SELECT * from Cards_Rooms WHERE `game` = %d """ % game_id)
+        select_card = """SELECT * from Cards_Rooms WHERE `game` = %d """ % game_id
         cursor.execute(select_card)
         records = cursor.fetchall()
         pl = 0
@@ -573,7 +578,7 @@ def player_with_victims(a_game):
         conn = sqlite3.connect("db.mystery")
         cursor = conn.cursor()
         print("\n")
-        select_card = ("""SELECT * from Cards_Victims WHERE `game` = %d """ % game_id)
+        select_card = """SELECT * from Cards_Victims WHERE `game` = %d """ % game_id
         cursor.execute(select_card)
         records = cursor.fetchall()
         pl = 0
@@ -606,36 +611,138 @@ def player_with_victims(a_game):
 @db_session
 def player_position_and_piece(player_name):
     players_Pieces = ["azul", "verde", "celeste", "amarillo", "rosa"]
-    players_Initial_Position = [(6,0),(6,19),(13,0),(13,19),(19,13),(19,6)]
+    players_Initial_Position = [(6, 0), (6, 19), (13, 0), (13, 19), (19, 13), (19, 6)]
     player = Player.get(name=player_name)
     playerOrder = get_player_order(player_name)
-    player.set(player_x = players_Initial_Position[playerOrder][0])
-    player.set(player_y = players_Initial_Position[playerOrder][1])
-    player.set(piece = players_Pieces[playerOrder])
+    player.set(player_x=players_Initial_Position[playerOrder][0])
+    player.set(player_y=players_Initial_Position[playerOrder][1])
+    player.set(piece=players_Pieces[playerOrder])
 
 
 @db_session
-def is_available(coordenada_X, coordenada_Y): #ver que la casilla con las coordenadas sea accesible (osea un camino)
-    available =[(0,13),(1,13),(2,13),(3,13),(4,13),(5,13),(6,13),(7,13),(8,13),(9,13),(10,13),(11,13),(12,13),(13,13),(14,13),(15,13),(16,13),(17,13),(18,13),(19,13),
-                (0,6),(1,6),(2,6),(3,6),(4,6),(5,6),(6,6),(7,6),(8,6),(9,6),(10,6),(11,6),(12,6),(13,6),(14,6),(15,6),(16,6),(17,6),(18,6),(19,6),
-                (6,19),(6,18),(6,17),(6,16),(6,15),(6,14),(6,12),(6,11),(6,10),(6,9),(6,8),(6,7),(6,5),(6,4),(6,3),(6,2),(6,1),(6,0),
-                (13,19),(13,18),(13,17),(13,16),(13,15),(13,14),(13,12),(13,11),(13,10),(13,9),(13,8),(13,7),(13,5),(13,4),(13,3),(13,2),(13,1),(13,0),
-                (5,17),(4,12),(5,9),(3,7),(5,4),(10,14),(10,5),(14,15),(15,12),(14,9),(16,7),(14,3)]
+def is_available(
+    coordenada_X, coordenada_Y
+):  # ver que la casilla con las coordenadas sea accessible (osea un camino)
+    available = [
+        (0, 13),
+        (1, 13),
+        (2, 13),
+        (3, 13),
+        (4, 13),
+        (5, 13),
+        (6, 13),
+        (7, 13),
+        (8, 13),
+        (9, 13),
+        (10, 13),
+        (11, 13),
+        (12, 13),
+        (13, 13),
+        (14, 13),
+        (15, 13),
+        (16, 13),
+        (17, 13),
+        (18, 13),
+        (19, 13),
+        (0, 6),
+        (1, 6),
+        (2, 6),
+        (3, 6),
+        (4, 6),
+        (5, 6),
+        (6, 6),
+        (7, 6),
+        (8, 6),
+        (9, 6),
+        (10, 6),
+        (11, 6),
+        (12, 6),
+        (13, 6),
+        (14, 6),
+        (15, 6),
+        (16, 6),
+        (17, 6),
+        (18, 6),
+        (19, 6),
+        (6, 19),
+        (6, 18),
+        (6, 17),
+        (6, 16),
+        (6, 15),
+        (6, 14),
+        (6, 12),
+        (6, 11),
+        (6, 10),
+        (6, 9),
+        (6, 8),
+        (6, 7),
+        (6, 5),
+        (6, 4),
+        (6, 3),
+        (6, 2),
+        (6, 1),
+        (6, 0),
+        (13, 19),
+        (13, 18),
+        (13, 17),
+        (13, 16),
+        (13, 15),
+        (13, 14),
+        (13, 12),
+        (13, 11),
+        (13, 10),
+        (13, 9),
+        (13, 8),
+        (13, 7),
+        (13, 5),
+        (13, 4),
+        (13, 3),
+        (13, 2),
+        (13, 1),
+        (13, 0),
+        (5, 17),
+        (4, 12),
+        (5, 9),
+        (3, 7),
+        (5, 4),
+        (10, 14),
+        (10, 5),
+        (14, 15),
+        (15, 12),
+        (14, 9),
+        (16, 7),
+        (14, 3),
+    ]
     res = False
-    i = 0    
-    while res == False and i<len(available):
+    i = 0
+    while res == False and i < len(available):
         if available[i][0] == coordenada_X and available[i][1] == coordenada_Y:
             res = True
         else:
-            i +=1 
+            i += 1
     return res
 
 
 @db_session
-def is_a_room(coordenada_X, coordenada_Y): #se fija si la casilla con las coordenadas es un recinto
-    rooms = [(5,17),(4,12),(5,9),(3,7),(5,4),(10,14),(10,5),(14,15),(15,12),(14,9),(16,7),(14,3)]
+def is_a_room(
+    coordenada_X, coordenada_Y
+):  # se fija si la casilla con las coordenadas es un recinto
+    rooms = [
+        (5, 17),
+        (4, 12),
+        (5, 9),
+        (3, 7),
+        (5, 4),
+        (10, 14),
+        (10, 5),
+        (14, 15),
+        (15, 12),
+        (14, 9),
+        (16, 7),
+        (14, 3),
+    ]
     res = False
-    i = 0 
+    i = 0
     while res == False and i < len(rooms):
         if rooms[i][0] == coordenada_X and rooms[i][1] == coordenada_Y:
             res = True
@@ -651,44 +758,44 @@ def move_player(player_name, movement):
     my_Y = myPlayer.player_y
     dice = myPlayer.dice_number
     if movement == "W" or movement == "w":
-        if is_available(my_X, my_Y+1):
-            if is_a_room(my_X, my_Y+1):
-                myPlayer.set(player_y = my_Y +1)
-                myPlayer.set(dice_number = 0)
+        if is_available(my_X, my_Y + 1):
+            if is_a_room(my_X, my_Y + 1):
+                myPlayer.set(player_y=my_Y + 1)
+                myPlayer.set(dice_number=0)
             else:
-                myPlayer.set(player_y = my_Y +1)
-                myPlayer.set(dice_number = dice -1)
+                myPlayer.set(player_y=my_Y + 1)
+                myPlayer.set(dice_number=dice - 1)
         else:
-            print("ilegal move")
+            print("illegal move")
     elif movement == "S" or movement == "s":
-        if is_available(my_X, my_Y-1):
-            if is_a_room(my_X, my_Y-1):
-                myPlayer.set(player_y = my_Y -1)
-                myPlayer.set(dice_number = 0)
+        if is_available(my_X, my_Y - 1):
+            if is_a_room(my_X, my_Y - 1):
+                myPlayer.set(player_y=my_Y - 1)
+                myPlayer.set(dice_number=0)
             else:
-                myPlayer.set(player_y = my_Y -1)
-                myPlayer.set(dice_number = dice -1)
+                myPlayer.set(player_y=my_Y - 1)
+                myPlayer.set(dice_number=dice - 1)
         else:
-            print("ilegal move")
+            print("illegal move")
     elif movement == "D" or movement == "d":
-        if is_available(my_X+1, my_Y):
-            if is_a_room(my_X+1, my_Y):
-                myPlayer.set(player_x= my_X +1 )
-                myPlayer.set(dice_number = 0)
+        if is_available(my_X + 1, my_Y):
+            if is_a_room(my_X + 1, my_Y):
+                myPlayer.set(player_x=my_X + 1)
+                myPlayer.set(dice_number=0)
             else:
-                myPlayer.set(player_x= my_X +1 )
-                myPlayer.set(dice_number = dice -1)
+                myPlayer.set(player_x=my_X + 1)
+                myPlayer.set(dice_number=dice - 1)
         else:
-            print("ilegal move")
+            print("illegal move")
     elif movement == "A" or movement == "a":
-        if is_available(my_X-1, my_Y):
-            if is_a_room(my_X-1, my_Y):
-                myPlayer.set(player_x = my_X -1) 
-                myPlayer.set(dice_number = 0)
+        if is_available(my_X - 1, my_Y):
+            if is_a_room(my_X - 1, my_Y):
+                myPlayer.set(player_x=my_X - 1)
+                myPlayer.set(dice_number=0)
             else:
-                myPlayer.set(player_x = my_X -1) 
-                myPlayer.set(dice_number = dice -1)
+                myPlayer.set(player_x=my_X - 1)
+                myPlayer.set(dice_number=dice - 1)
         else:
-            print("ilegal move") 
+            print("illegal move")
     else:
         print("wrong key, use AWSD")

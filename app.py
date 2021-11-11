@@ -384,11 +384,10 @@ async def dice_number(player_name, game_name):
         and is_started(game_name)
         and player_is_in_turn(player_name)
     ):
-        random_number_dice(player_name)
-        return {"number successfully generated to player"}
+        dice = random_number_dice(player_name)
     else:
         raise HTTPException(status_code=404, detail="player doesn't exist")
-
+    return dice
 
 # Shows Player
 
@@ -433,7 +432,7 @@ async def moving_player(player_name : str, direction : str):
 
     Args: \n
         player_name (str): Name of the player we want to move. \n
-        sirection (str): Direction of the movement.\n
+        direction (str): Direction of the movement.\n
 
     Raises: \n
         HTTPException: The player does not exist. \n

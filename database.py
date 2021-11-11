@@ -509,8 +509,9 @@ def player_with_rooms(a_game):
             value = row[3]
             while True:
                 a_player = players[pl]
+                print(a_player)
                 if (get_game_id(a_game) == game) and (value == 0):
-                    card = get_card_monster(id_card)
+                    card = get_card_room(id_card)
                     card.set(player=a_player)
                     card.set(is_in_use=True)
                     cursor.close()
@@ -545,7 +546,7 @@ def player_with_victims(a_game):
             while True:
                 a_player = players[pl]
                 if (get_game_id(a_game) == game) and (value == 0):
-                    card = get_card_monster(id_card)
+                    card = get_card_victims(id_card)
                     card.set(player=a_player)
                     card.set(is_in_use=True)
                     cursor.close()

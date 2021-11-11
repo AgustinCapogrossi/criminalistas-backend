@@ -290,6 +290,11 @@ def set_player_order(player, new_order):
 
 
 @db_session
+def get_player(player):
+    return Player.get(name=player).name
+
+
+@db_session
 def player_is_host(player):
     return Player.get(name=player).host
 
@@ -302,9 +307,20 @@ def player_set_host(player):
 
 
 @db_session
+def get_player_id(player):
+    return Player.get(name=player).id
+
+
+@db_session
 def get_player_game(un_player):
     player = Player.get(name=un_player)
     return player.game.id
+
+
+@db_session
+def get_player_game_name(un_player):
+    player = Player.get(name=un_player)
+    return player.game.name
 
 
 @db_session
@@ -348,6 +364,57 @@ def insert_player(un_game, un_player):
 @db_session
 def get_player_dice(player):
     return Player.get(name=player).dice_number
+
+
+@db_session
+def get_next_player_order(un_player):
+    order = get_player_order(un_player)
+    my_list = get_all_players()
+    my_new_list = []
+    game_id = get_player_game(un_player)
+    for i in range(0, len(my_list), 1):
+        if my_list[i][4] == game_id:
+            my_new_list.append(my_list[i])
+    if order == len(my_new_list) - 1:
+        order == -1
+    for i in range(0, len(my_new_list), 1):
+        if my_new_list[i][5] == order + 1:
+            next_order = get_player_order(my_new_list[i][1])
+    return next_order
+
+
+@db_session
+def get_next_player_id(un_player):
+    order = get_player_order(un_player)
+    my_list = get_all_players()
+    my_new_list = []
+    game_id = get_player_game(un_player)
+    for i in range(0, len(my_list), 1):
+        if my_list[i][4] == game_id:
+            my_new_list.append(my_list[i])
+    if order == len(my_new_list) - 1:
+        order == -1
+    for i in range(0, len(my_new_list), 1):
+        if my_new_list[i][5] == order + 1:
+            next_id = get_player_id(my_new_list[i][1])
+    return next_id
+
+
+@db_session
+def get_next_player_name(un_player):
+    order = get_player_order(un_player)
+    my_list = get_all_players()
+    my_new_list = []
+    game_id = get_player_game(un_player)
+    for i in range(0, len(my_list), 1):
+        if my_list[i][4] == game_id:
+            my_new_list.append(my_list[i])
+    if order == len(my_new_list) - 1:
+        order == -1
+    for i in range(0, len(my_new_list), 1):
+        if my_new_list[i][5] == order + 1:
+            next_name = get_player(my_new_list[i][1])
+    return next_name
 
 
 # ----------------------------------------- CARDS -----------------------------------------
@@ -449,17 +516,30 @@ def envelope(game):
             conn.close()
 
 
+# -------------------------Returns card ID------------------------#
+
+
+@db_session
+def get_monster_id(card):
+    return Cards_Monsters.get(name=card).id
+
+
+@db_session
+def get_victim_id(card):
+    return Cards_Victims.get(name=card).id
+
+
+@db_session
+def get_room_id(card):
+    return Cards_Rooms.get(name=card).id
+
+
+# ----------------------------------------------------------------#
+
+
 @db_session
 def get_card_monster(id_card):
     return Cards_Monsters.get(id=id_card)
-
-
-@db_session
-def player_delete(un_player):
-    player = Player.get(name=un_player)
-    curgame = player.game
-    curgame.set(num_players=get_number_player(curgame.name) - 1)
-    Player.delete(player)
 
 
 @db_session
@@ -472,9 +552,67 @@ def get_card_victims(id_card):
     return Cards_Victims.get(id=id_card)
 
 
+# ----------------------------------------------------------------#
+# ---------------------------Card exists--------------------------#
+
+
 @db_session
-def get_card_game(card):
+def card_monster_exist(card):
+    if Cards_Monsters.get(name=card) is not None:
+        return True
+
+
+@db_session
+def card_victims_exist(card):
+    if Cards_Victims.get(name=card) is not None:
+        return True
+
+
+@db_session
+def card_room_exist(card):
+    if Cards_Rooms.get(name=card) is not None:
+        return True
+
+
+# ----------------------------------------------------------------#
+# ---------------------------Card game----------------------------#
+
+
+@db_session
+def get_monster_game(card):
     return Cards_Monsters.get(name=card).game
+
+
+@db_session
+def get_victim_game(card):
+    return Cards_Victims.get(name=card).game
+
+
+@db_session
+def get_room_game(card):
+    return Cards_Rooms.get(name=card).game
+
+
+# ----------------------------------------------------------------#
+# -------------------------Card Player----------------------------#
+
+
+@db_session
+def get_monster_player(card):
+    return Cards_Monsters.get(name=card).player.id
+
+
+@db_session
+def get_victim_player(card):
+    return Cards_Victims.get(name=card).player.id
+
+
+@db_session
+def get_room_player(card):
+    return Cards_Rooms.get(name=card).player.id
+
+
+# ----------------------------------------------------------------#
 
 
 @db_session
@@ -497,6 +635,10 @@ def get_players(game):
         if conn:
             conn.close()
     return playerList
+
+
+# ----------------------------------------------------------------#
+# -------------------------Player Card----------------------------#
 
 
 @db_session
@@ -605,12 +747,259 @@ def player_with_victims(a_game):
             conn.close()
 
 
+# ----------------------------------------------------------------#
+# -------------------------Show Cards-----------------------------#
+
+
+@db_session
+def get_monster_card():
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_card = """SELECT * from Cards_Monsters"""
+        cursor.execute(select_card)
+        records = cursor.fetchall()
+        cardList = []
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("is_in_use: ", row[2])
+            print("is_in_envelope: ", row[3])
+            print("game: ", row[4])
+            print("player: ", row[5])
+            print("\n")
+            card = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            cardList.append(card)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return cardList
+
+
+@db_session
+def get_victim_card():
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_card = """SELECT * from Cards_Victims"""
+        cursor.execute(select_card)
+        records = cursor.fetchall()
+        cardList = []
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("is_in_use: ", row[2])
+            print("is_in_envelope: ", row[3])
+            print("game: ", row[4])
+            print("player: ", row[5])
+            print("\n")
+            card = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            cardList.append(card)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return cardList
+
+
+@db_session
+def get_room_card():
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        print("\n")
+        select_card = """SELECT * from Cards_Rooms"""
+        cursor.execute(select_card)
+        records = cursor.fetchall()
+        cardList = []
+        for row in records:
+            print("id: ", row[0])
+            print("name: ", row[1])
+            print("is_in_use: ", row[2])
+            print("is_in_envelope: ", row[3])
+            print("game: ", row[4])
+            print("player: ", row[5])
+            print("\n")
+            card = [row[0], row[1], row[2], row[3], row[4], row[5]]
+            cardList.append(card)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return cardList
+
+
+# ----------------------------------------------------------------#
+# ---------------------Card in envelope---------------------------#
+
+
+@db_session
+def get_monster_card_envelope(monster_card):
+    card_list = get_monster_card()
+    new_card_list = []
+    game_name = get_monster_game(monster_card)
+    game_id = get_game_id(game_name)
+    # Returns cards from game#
+    for i in range(0, len(card_list), 1):
+        if card_list[i][4] == game_id:
+            new_card_list.append(card_list[i])
+    # Returns card in envelope#
+    for i in range(0, len(new_card_list), 1):
+        if new_card_list[i][3] == 1:
+            return new_card_list[i]
+
+
+@db_session
+def get_victim_card_envelope(victim_card):
+    card_list = get_victim_card()
+    new_card_list = []
+    game_name = get_victim_game(victim_card)
+    game_id = get_game_id(game_name)
+    # Returns cards from game#
+    for i in range(0, len(card_list), 1):
+        if card_list[i][4] == game_id:
+            new_card_list.append(card_list[i])
+    # Returns card in envelope#
+    for i in range(0, len(new_card_list), 1):
+        if new_card_list[i][3] == 1:
+            return new_card_list[i]
+
+
+@db_session
+def get_room_card_envelope(room_card):
+    card_list = get_room_card()
+    new_card_list = []
+    game_name = get_room_game(room_card)
+    game_id = get_game_id(game_name)
+    # Returns cards from game#
+    for i in range(0, len(card_list), 1):
+        if card_list[i][4] == game_id:
+            new_card_list.append(card_list[i])
+    # Returns card in envelope#
+    for i in range(0, len(new_card_list), 1):
+        if new_card_list[i][3] == 1:
+            return new_card_list[i]
+
+
+# ----------------------------------------------------------------#
+
+
+# Suspects
+@db_session
+def suspect(player_who_suspects, monster_card, victim_card, room_card):
+    name = player_who_suspects
+    order = get_player_order(name)
+    game = get_player_game_name(name)
+
+    # Compare next player's id with cards from suspicion id#
+    while order + 1 < get_number_player(game) - 1:
+
+        next_id = get_next_player_id(name)
+        next_order = get_next_player_order(name)
+
+        monster_player = get_monster_player(monster_card)
+        victim_player = get_victim_player(victim_card)
+        room_player = get_room_player(room_card)
+
+        # See how many cards coincide#
+        similarities = 0
+
+        is_monster = False
+        is_victim = False
+        is_room = False
+
+        if monster_player == next_id:
+            similarities = similarities + 1
+            is_monster = True
+        if victim_player == next_id:
+            similarities = similarities + 1
+            is_victim = True
+        if room_player == next_id:
+            similarities = similarities + 1
+            is_room = True
+        # If no cards coincide skip the turn#
+        if similarities == 0:
+            name = get_next_player_name(name)
+        # If only one card coincides show it #
+        if similarities == 1:
+            if is_monster:
+                monster_list = get_monster_card()
+                card_id = get_monster_id(monster_card)
+                for i in range(0, len(monster_list), 1):
+                    if monster_list[i][0] == card_id:
+                        return monster_list[i]
+            elif is_victim:
+                victim_list = get_victim_card()
+                card_id = get_victim_id(victim_card)
+                for i in range(0, len(victim_list), 1):
+                    if victim_list[i][0] == card_id:
+                        return victim_list[i]
+            elif is_room:
+                room_list = get_room_card()
+                card_id = get_room_id(room_card)
+                for i in range(0, len(room_list), 1):
+                    if room_list[i][0] == card_id:
+                        return room_list[i]
+        # If more than one card coincides let the player choose which one to show#
+        if similarities > 1:
+            if is_monster:
+                monster_list = get_monster_card()
+                card_id = get_monster_id(monster_card)
+                for i in range(0, len(monster_list), 1):
+                    if monster_list[i][0] == card_id:
+                        monster_card = monster_list[i]
+            if is_victim:
+                victim_list = get_victim_card()
+                card_id = get_victim_id(victim_card)
+                for i in range(0, len(victim_list), 1):
+                    if victim_list[i][0] == card_id:
+                        victim_card = victim_list[i]
+            if is_room:
+                room_list = get_room_card()
+                card_id = get_room_id(room_card)
+                for i in range(0, len(room_list), 1):
+                    if room_list[i][0] == card_id:
+                        room_card = room_list[i]
+            return monster_card, victim_card, room_card
+
+
+# Accusation
+@db_session
+def accuse(player_who_suspects, monster_card, victim_card, room_card):
+    monster_id = get_monster_id(monster_card)
+    victim_id = get_victim_id(victim_card)
+    room_id = get_room_id(room_card)
+
+    envelope_monster = get_monster_card_envelope(monster_card)
+    envelope_victim = get_victim_card_envelope(victim_card)
+    envelope_room = get_room_card_envelope(room_card)
+
+    if (
+        monster_id == get_monster_id(envelope_monster)
+        and victim_id == get_victim_id(envelope_victim)
+        and room_id == get_room_id(envelope_room)
+    ):
+        print("Winner")
+    else:
+        print("Loser")
+    return envelope_monster, envelope_victim, envelope_room
+
+
 # ----------------------------------------- BOARD -----------------------------------------
 
 
 @db_session
 def player_position_and_piece(player_name):
-    players_Pieces = ["azul", "verde", "celeste", "amarillo", "rosa"]
+    players_Pieces = ["azul", "verde", "rojo", "celeste", "amarillo", "rosa"]
     players_Initial_Position = [(6, 0), (6, 19), (13, 0), (13, 19), (19, 13), (19, 6)]
     player = Player.get(name=player_name)
     playerOrder = get_player_order(player_name)

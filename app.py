@@ -239,7 +239,7 @@ async def exitgame(player_to_exit: str):
         player_delete(player_to_exit)
         if get_number_player(get_game_name(game_id)) == 0:
             delete_game(get_game_name(game_id))
-            
+
         return {"exit game"}
 
 
@@ -389,6 +389,7 @@ async def dice_number(player_name, game_name):
         raise HTTPException(status_code=404, detail="player doesn't exist")
     return dice
 
+
 # Shows Player
 
 
@@ -407,9 +408,24 @@ async def show_players(game_name):
             my_new_list.append(my_list[i])
     return my_new_list
 
+
+@app.post("/cards/suspicion", tags=["Cards Methods"])
+async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
+    if not player_is_in_turn(player_who_suspects):
+        raise HTTPException(status_code=404, detail="player is not in turn")
+    if not card_monster_exist(monster_card):
+        raise HTTPException(status_code=404, detail="monster card doesn't exist")
+    elif not card_room_exist(room_card):
+        raise HTTPException(status_code=404, detail="room card doesn't exist")
+    elif not card_victims_exist(victim_card):
+        raise HTTPException(status_code=404, detail="victim card doesn't exist")
+    else:
+        return suspect(player_who_suspects, monster_card, victim_card, room_card)
+
+
 @app.post("/player/set_position_and_piece", tags=["Player Methods"])
 async def set_piece_position(player_name):
-    """ Set piece and position of the player in the game.
+    """Set piece and position of the player in the game.
 
     Args: \n
         player_name (str): Name of the player for whom we are generating the piece and position. \n
@@ -422,13 +438,14 @@ async def set_piece_position(player_name):
     """
     if player_exist(player_name):
         player_position_and_piece(player_name)
-        return{"position and piece generated"}
+        return {"position and piece generated"}
     elif not player_exist(player_name):
         raise HTTPException(status_code=404, detail="player doesn't exist")
 
+
 @app.post("/player/move", tags=["Player Methods"])
-async def moving_player(player_name : str, direction : str):
-    """ Moves the player in the indicated position.
+async def moving_player(player_name: str, direction: str):
+    """Moves the player in the indicated position.
 
     Args: \n
         player_name (str): Name of the player we want to move. \n
@@ -441,22 +458,36 @@ async def moving_player(player_name : str, direction : str):
 
     Returns: \n
         str: Verification text.
-    """    
-    if get_player_dice(player_name) >= 1:    
-        if player_exist(player_name) and (direction == "W" or direction == "w"
-                                         or direction == "S" or direction == "s" 
-                                         or direction == "A" or direction == "a" 
-                                         or direction == "D" or direction == "d"):
+    """
+    if get_player_dice(player_name) >= 1:
+        if player_exist(player_name) and (
+            direction == "W"
+            or direction == "w"
+            or direction == "S"
+            or direction == "s"
+            or direction == "A"
+            or direction == "a"
+            or direction == "D"
+            or direction == "d"
+        ):
             move_player(player_name, direction)
         elif not player_exist(player_name):
             raise HTTPException(status_code=404, detail="player doesn't exist")
-        elif  not (direction == "W" or direction == "w"
-                                         or direction == "S" or direction == "s" 
-                                         or direction == "A" or direction == "a" 
-                                         or direction == "D" or direction == "d"):
+        elif not (
+            direction == "W"
+            or direction == "w"
+            or direction == "S"
+            or direction == "s"
+            or direction == "A"
+            or direction == "a"
+            or direction == "D"
+            or direction == "d"
+        ):
             raise HTTPException(status_code=404, detail="error, use just AWSD keys")
     else:
-        raise HTTPException(status_code=404, detail="player doesn't have any moves left")
+        raise HTTPException(
+            status_code=404, detail="player doesn't have any moves left"
+        )
 
 
 # ----------------------------------------- CARDS -----------------------------------------

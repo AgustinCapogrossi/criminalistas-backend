@@ -408,6 +408,57 @@ async def show_players(game_name):
             my_new_list.append(my_list[i])
     return my_new_list
 
+@app.post("/player/set_position_and_piece", tags=["Player Methods"])
+async def set_piece_position(player_name):
+    """ Set piece and position of the player in the game.
+
+    Args: \n
+        player_name (str): Name of the player for whom we are generating the piece and position. \n
+
+    Raises: \n
+        HTTPException: The player does not exist. \n
+
+    Returns: \n
+        str: Verification text.
+    """
+    if player_exist(player_name):
+        player_position_and_piece(player_name)
+        return{"position and piece generated"}
+    elif not player_exist(player_name):
+        raise HTTPException(status_code=404, detail="player doesn't exist")
+
+@app.post("/player/move", tags=["Player Methods"])
+async def moving_player(player_name : str, direction : str):
+    """ Moves the player in the indicated position.
+
+    Args: \n
+        player_name (str): Name of the player we want to move. \n
+        sirection (str): Direction of the movement.\n
+
+    Raises: \n
+        HTTPException: The player does not exist. \n
+        HTTPException: AWSD keys were not entered.\n
+        HTTPException: The player doesn't have any moves left.\n
+
+    Returns: \n
+        str: Verification text.
+    """    
+    if get_player_dice(player_name) >= 1:    
+        if player_exist(player_name) and (direction == "W" or direction == "w"
+                                         or direction == "S" or direction == "s" 
+                                         or direction == "A" or direction == "a" 
+                                         or direction == "D" or direction == "d"):
+            move_player(player_name, direction)
+        elif not player_exist(player_name):
+            raise HTTPException(status_code=404, detail="player doesn't exist")
+        elif  not (direction == "W" or direction == "w"
+                                         or direction == "S" or direction == "s" 
+                                         or direction == "A" or direction == "a" 
+                                         or direction == "D" or direction == "d"):
+            raise HTTPException(status_code=404, detail="error, use just AWSD keys")
+    else:
+        raise HTTPException(status_code=404, detail="player doesn't have any moves left")
+
 
 # ----------------------------------------- CARDS -----------------------------------------
 

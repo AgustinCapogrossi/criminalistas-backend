@@ -26,6 +26,9 @@ class Player(db.Entity):
     cards_monsters = Set("Cards_Monsters")
     cards_rooms = Set("Cards_Rooms")
     cards_victims = Set("Cards_Victims")
+    piece = Optional(str)
+    player_x = Optional(int)
+    player_y = Optional(int)
 
 
 # Game Table
@@ -338,6 +341,11 @@ def insert_player(un_game, un_player):
     game.Players.add(player)
 
 
+@db_session
+def get_player_dice(player):
+    return Player.get(name=player).dice_number
+
+
 # ----------------------------------------- CARDS -----------------------------------------
 
 # Generate Cards
@@ -541,3 +549,97 @@ def player_with_victims(a_game):
     finally:
         if conn:
             conn.close()
+
+
+# ----------------------------------------- BOARD -----------------------------------------
+
+
+@db_session
+def player_position_and_piece(player_name):
+    players_Pieces = ["azul", "verde", "celeste", "amarillo", "rosa"]
+    players_Initial_Position = [(6,0),(6,19),(13,0),(13,19),(19,13),(19,6)]
+    player = Player.get(name=player_name)
+    playerOrder = get_player_order(player_name)
+    player.set(player_x = players_Initial_Position[playerOrder][0])
+    player.set(player_y = players_Initial_Position[playerOrder][1])
+    player.set(piece = players_Pieces[playerOrder])
+
+
+@db_session
+def is_available(coordenada_X, coordenada_Y): #ver que la casilla con las coordenadas sea accesible (osea un camino)
+    available =[(0,13),(1,13),(2,13),(3,13),(4,13),(5,13),(6,13),(7,13),(8,13),(9,13),(10,13),(11,13),(12,13),(13,13),(14,13),(15,13),(16,13),(17,13),(18,13),(19,13),
+                (0,6),(1,6),(2,6),(3,6),(4,6),(5,6),(6,6),(7,6),(8,6),(9,6),(10,6),(11,6),(12,6),(13,6),(14,6),(15,6),(16,6),(17,6),(18,6),(19,6),
+                (6,19),(6,18),(6,17),(6,16),(6,15),(6,14),(6,12),(6,11),(6,10),(6,9),(6,8),(6,7),(6,5),(6,4),(6,3),(6,2),(6,1),(6,0),
+                (13,19),(13,18),(13,17),(13,16),(13,15),(13,14),(13,12),(13,11),(13,10),(13,9),(13,8),(13,7),(13,5),(13,4),(13,3),(13,2),(13,1),(13,0),
+                (5,17),(4,12),(5,9),(3,7),(5,4),(10,14),(10,5),(14,15),(15,12),(14,9),(16,7),(14,3)]
+    res = False
+    i = 0    
+    while res == False and i<len(available):
+        if available[i][0] == coordenada_X and available[i][1] == coordenada_Y:
+            res = True
+        else:
+            i +=1 
+    return res
+
+
+@db_session
+def is_a_room(coordenada_X, coordenada_Y): #se fija si la casilla con las coordenadas es un recinto
+    rooms = [(5,17),(4,12),(5,9),(3,7),(5,4),(10,14),(10,5),(14,15),(15,12),(14,9),(16,7),(14,3)]
+    res = False
+    i = 0 
+    while res == False and i < len(rooms):
+        if rooms[i][0] == coordenada_X and rooms[i][1] == coordenada_Y:
+            res = True
+        else:
+            i += 1
+    return res
+
+
+@db_session
+def move_player(player_name, movement):
+    myPlayer = Player.get(name=player_name)
+    my_X = myPlayer.player_x
+    my_Y = myPlayer.player_y
+    dice = myPlayer.dice_number
+    if movement == "W" or movement == "w":
+        if is_available(my_X, my_Y+1):
+            if is_a_room(my_X, my_Y+1):
+                myPlayer.set(player_y = my_Y +1)
+                myPlayer.set(dice_number = 0)
+            else:
+                myPlayer.set(player_y = my_Y +1)
+                myPlayer.set(dice_number = dice -1)
+        else:
+            print("ilegal move")
+    elif movement == "S" or movement == "s":
+        if is_available(my_X, my_Y-1):
+            if is_a_room(my_X, my_Y-1):
+                myPlayer.set(player_y = my_Y -1)
+                myPlayer.set(dice_number = 0)
+            else:
+                myPlayer.set(player_y = my_Y -1)
+                myPlayer.set(dice_number = dice -1)
+        else:
+            print("ilegal move")
+    elif movement == "D" or movement == "d":
+        if is_available(my_X+1, my_Y):
+            if is_a_room(my_X+1, my_Y):
+                myPlayer.set(player_x= my_X +1 )
+                myPlayer.set(dice_number = 0)
+            else:
+                myPlayer.set(player_x= my_X +1 )
+                myPlayer.set(dice_number = dice -1)
+        else:
+            print("ilegal move")
+    elif movement == "A" or movement == "a":
+        if is_available(my_X-1, my_Y):
+            if is_a_room(my_X-1, my_Y):
+                myPlayer.set(player_x = my_X -1) 
+                myPlayer.set(dice_number = 0)
+            else:
+                myPlayer.set(player_x = my_X -1) 
+                myPlayer.set(dice_number = dice -1)
+        else:
+            print("ilegal move") 
+    else:
+        print("wrong key, use AWSD")

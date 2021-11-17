@@ -19,7 +19,7 @@ def get_random_string(length):
     letters = string.ascii_lowercase
     return "".join(random.choice(letters) for i in range(length))
 
-
+#------------------------------CREATION GAME TEST--------------------------------------------
 #creation game succesful
 def test_create_game():
     client.post(
@@ -72,6 +72,9 @@ def test_create_gamebad_maxlen():
         "game/creationgame?game_name={}&game_creator=usergame1".format(rstr),
         headers={"accept": "application/json"},
     )
+    client.delete("/user/delete_user?user_name=usergame1",
+        headers={"accept": "application/json"},
+    )
     assert response.status_code == 404
 
 
@@ -79,14 +82,17 @@ def test_create_gamebad_maxlen():
 
 def test_create_gamebad_minlen():
     client.post(
-        "user/creationuser?user_to_create=usergame2",
+        "user/creationuser?user_to_create=usergame1",
         headers={"accept": "application/json"},
     )
     rstr = get_random_string(1)
     response = client.post(
-        "game/creationgame?game_name={}&game_creator=usergame2".format(rstr),
+        "game/creationgame?game_name={}&game_creator=usergame1".format(rstr),
         headers={"accept": "application/json"},
     )
+    client.delete("/user/delete_user?user_name=usergame1",
+                  headers={"accept": "application/json"},
+                  )
     assert response.status_code == 404
 
 
@@ -108,3 +114,104 @@ def test_create_gamebad_gameexist():
     )
     assert response.status_code == 404
 
+#--------------------------------------JOIN GAME TEST-----------------------------------------
+
+#join game successful
+
+def test_join_game():
+    client.post(
+        "user/creationuser?user_to_create=usergame1",
+        headers={"accept": "application/json"},
+    )
+    response = client.post(
+        "game/joingame?game_to_play=game&user_to_play=usergame1"
+    )
+    assert response.status_code == 200
+
+#bad join game (game unexist)
+
+def test_badjoin_game_unexist():
+    client.post(
+        "user/creationuser?user_to_create=usergame2",
+        headers={"accept": "application/json"},
+    )
+    response = client.post(
+        "game/joingame?game_to_play=gamebad&user_to_play=usergame1"
+    )
+    client.delete("/user/delete_user?user_name=usergame2",
+                  headers={"accept": "application/json"},
+                  )
+    assert response.status_code == 404
+
+#bad join game (player in game)
+
+def test_badjoin_game_player_in_game():
+    response = client.post(
+        "game/joingame?game_to_play=gamebad&user_to_play=usergame1",
+        headers={'accept': 'application/json'}
+    )
+    assert response.status_code == 404
+
+#bad join game (user not exist)
+
+def test_badjoin_game_user_unexist():
+    response = client.post(
+        "game/joingame?game_to_play=gamebad&user_to_play=baduser",
+        headers={'accept':'application/json'}
+    )
+    assert response.status_code == 404
+
+#bad join game (game complete)
+
+def test_badjoin_game_complete():
+    client.post(
+        "user/creationuser?user_to_create=usergame2",
+        headers={"accept": "application/json"},
+    )
+    client.post(
+        "user/creationuser?user_to_create=usergame3",
+        headers={"accept": "application/json"},
+    )
+    client.post(
+        "user/creationuser?user_to_create=usergame4",
+        headers={"accept": "application/json"},
+    )
+    client.post(
+        "user/creationuser?user_to_create=usergame5",
+        headers={"accept": "application/json"},
+    )
+    client.post(
+        "user/creationuser?user_to_create=usergame6",
+        headers={"accept": "application/json"},
+    )
+    client.post(
+        "game/joingame?game_to_play=game&user_to_play=usergame2",
+        headers={"accept": "application/json"},
+    )
+    client.post(
+        "game/joingame?game_to_play=game&user_to_play=usergame3",
+        headers={"accept": "application/json"},
+    )
+    client.post(
+        "game/joingame?game_to_play=game&user_to_play=usergame4",
+        headers={"accept": "application/json"},
+    )
+    client.post(
+        "game/joingame?game_to_play=game&user_to_play=usergame5",
+        headers={"accept": "application/json"},
+    )
+    response = client.post(
+        "game/joingame?game_to_play=game&user_to_play=usergame6",
+        headers={"accept": "application/json"},
+    )
+    assert response.status_code == 404
+
+#--------------------------------------EXIT GAME------------------------------
+
+#exit game successful
+
+def test_exit_game():
+    response = client.delete("/game/exitgame?player_to_exit=usergame5",
+                             headers={"accept": "application/json"},
+                             )
+    assert response.status_code == 200

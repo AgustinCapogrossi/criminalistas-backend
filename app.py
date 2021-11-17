@@ -60,7 +60,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
 # Creates a Nickname
 
 
-@app.post("/user/creationuser", tags=["User Methods"])
+@app.post("/user/creationuser", tags=["User Methods"], status_code=200)
 async def user_creation(user_to_create: str):
     """It creates a new user and allocates it in the database.
     Args: \n

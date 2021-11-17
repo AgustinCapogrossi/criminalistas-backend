@@ -35,4 +35,43 @@ def test_create_user():
 
 # Bad Creation user exist
 
+def test_creation_user_exist():
+    register = client.post(
+        "user/creationuser?user_to_create=user",
+        headers={'accept':'application/json'}
+    )
+    assert register.status_code == 404
 
+# Bad Creaton user max len
+def test_creation_user_maxlen():
+    rstr = get_random_string(12)
+    register = client.post(
+        "/user/creationuser?user_to_create={}".format(rstr),
+        headers={'accept':'application/json'}
+    )
+    assert register.status_code == 404
+
+#Bad Creation user min len
+def test_creation_user_minlen():
+    rstr = get_random_string(1)
+    register = client.post(
+        "/user/creationuser?user_to_create={}".format(rstr),
+        headers={'accept':'application/json'}
+    )
+    assert  register.status_code == 404
+
+#Delete user successful
+def test_delete_user():
+    deleter = client.delete(
+        "/user/delete_user?user_name=user",
+        headers={'accept':'application/json'}
+    )
+    assert deleter.status_code == 200
+
+#Delete user bad (user not exist)
+def test_delete_userunexist():
+    deleter = client.delete(
+        "/user/delete_user?user_name=user",
+        headers={'accept':'application/json'}
+    )
+    assert  deleter.status_code == 404

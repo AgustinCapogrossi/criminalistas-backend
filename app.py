@@ -373,13 +373,16 @@ async def show_players(game_name):
     Returns: \n
         my_list: A list containing the active players and their inner values. \n
     """
-    my_list = get_all_players()
-    my_new_list = []
-    game_id = get_game_id(game_name)
-    for i in range(0, len(my_list), 1):
-        if my_list[i][4] == game_id:
-            my_new_list.append(my_list[i])
-    return my_new_list
+    if not game_exist(game_name):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
+    else:
+        my_list = get_all_players()
+        my_new_list = []
+        game_id = get_game_id(game_name)
+        for i in range(0, len(my_list), 1):
+            if my_list[i][4] == game_id:
+                my_new_list.append(my_list[i])
+        return my_new_list
 
 
 @app.post("/cards/suspicion", tags=["Cards Methods"])

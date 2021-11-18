@@ -360,7 +360,7 @@ async def dice_number(player_name, game_name):
     ):
         dice = random_number_dice(player_name)
     else:
-        raise HTTPException(status_code=404, detail="player doesn't exist")
+        raise HTTPException(status_code=404, detail="game doesn't exist")
     return dice
 
 

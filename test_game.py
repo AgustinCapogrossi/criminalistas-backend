@@ -242,3 +242,73 @@ def test_start_game_bad_not_exist():
                            headers={"accept":"application/json"},
                            )
     assert response.status_code == 404
+
+#bad start game (few player)
+def test_start_game_bad_fewpl():
+    client.post(
+        "user/creationuser?user_to_create=usertest",
+        headers={"accept": "application/json"},
+    )
+    client.post(
+        "game/creationgame?game_name=gametest&game_creator=usertest",
+        headers={"accept": "application/json"},
+    )
+    response = client.post("/game/start_game?game_to_start=gametest",
+                           headers={"accept":"application/json"},
+                           )
+    assert response.status_code == 404
+
+#---------------------------------------SHOW GAMES--------------------------------
+def test_show_games():
+    response = client.get("/game/show_available_games",
+                          headers={"accept":"application/json"},
+                          )
+    assert response.status_code == 200
+
+#???????????????????????????????DELETE GAME?????????????????????????????
+
+#---------------------------ELIMINATION OF EXCESS DATA----------------------------
+
+def test_delete_data():
+    client.delete("/game/exitgame?player_to_exit=userg",
+                  headers={"accept": "application/json"},
+                  )
+    client.delete("/game/exitgame?player_to_exit=usergame",
+                  headers={"accept": "application/json"},
+                  )
+    client.delete("/game/exitgame?player_to_exit=usergame1",
+                  headers={"accept": "application/json"},
+                  )
+    client.delete("/game/exitgame?player_to_exit=usergame2",
+                  headers={"accept": "application/json"},
+                  )
+    client.delete("/game/exitgame?player_to_exit=usergame3",
+                  headers={"accept": "application/json"},
+                  )
+    client.delete("/game/exitgame?player_to_exit=usergame4",
+                  headers={"accept": "application/json"},
+                  )
+    client.delete("/game/exitgame?player_to_exit=usertest",
+                  headers={"accept": "application/json"},
+                  )
+    client.delete(
+        "/user/delete_user?user_name=userg",
+        headers={'accept': 'application/json'}
+    )
+    client.delete(
+        "/user/delete_user?user_name=usergame",
+        headers={'accept': 'application/json'}
+    )
+    for i in range(7):
+        client.delete(
+            "/user/delete_user?user_name=usergame{}".format(i),
+            headers={'accept': 'application/json'}
+        )
+    client.delete(
+        "/user/delete_user?user_name=user",
+        headers={'accept': 'application/json'}
+    )
+    client.delete(
+        "/user/delete_user?user_name=usertest",
+        headers={'accept': 'application/json'}
+    )

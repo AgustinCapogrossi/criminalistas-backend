@@ -54,11 +54,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
         data = await websocket.receive_text()
         await manager.broadcast(f"Client {client_id}: {data}")
 
-
 # ----------------------------------------- USER -----------------------------------------
-
 # Creates a Nickname
-
 
 @app.post("/user/creationuser", tags=["User Methods"], status_code=200)
 async def user_creation(user_to_create: str):
@@ -111,8 +108,6 @@ async def user_delete(user_name: str):
 # ----------------------------------------- GAME -----------------------------------------
 
 # Creates a Game
-
-
 @app.post("/game/creationgame", tags=["Game Methods"])
 async def game_creation(game_name: str, game_creator: str):
     """It creates a new game and allocates it within the database.\n
@@ -273,8 +268,6 @@ async def show_games():
 
 
 # Delete Game
-
-
 @app.delete("/game/delete_game", tags=["Game Methods"])
 async def delete_a_game(game_name: str):
     """Deletes an empty game.
@@ -373,6 +366,7 @@ async def show_players(game_name):
     Returns: \n
         my_list: A list containing the active players and their inner values. \n
     """
+
     if not game_exist(game_name):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:
@@ -383,8 +377,7 @@ async def show_players(game_name):
             if my_list[i][4] == game_id:
                 my_new_list.append(my_list[i])
         return my_new_list
-
-
+      
 @app.post("/cards/suspicion", tags=["Cards Methods"])
 async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
     if not player_is_in_turn(player_who_suspects):
@@ -402,10 +395,14 @@ async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
 @app.post("/player/set_position_and_piece", tags=["Player Methods"])
 async def set_piece_position(player_name):
     """Set piece and position of the player in the game.
+
+
     Args: \n
         player_name (str): Name of the player for whom we are generating the piece and position. \n
+
     Raises: \n
         HTTPException: The player does not exist. \n
+        
     Returns: \n
         str: Verification text.
     """
@@ -419,13 +416,16 @@ async def set_piece_position(player_name):
 @app.post("/player/move", tags=["Player Methods"])
 async def moving_player(player_name: str, direction: str):
     """Moves the player in the indicated position.
+
     Args: \n
         player_name (str): Name of the player we want to move. \n
         direction (str): Direction of the movement.\n
+
     Raises: \n
         HTTPException: The player does not exist. \n
         HTTPException: AWSD keys were not entered.\n
         HTTPException: The player doesn't have any moves left.\n
+        
     Returns: \n
         str: Verification text.
     """
@@ -473,6 +473,7 @@ async def select_envelope(game_name):
     Returns: \n
         str: Verification text.
     """
+
     if not game_exist(game_name):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:
@@ -491,4 +492,6 @@ async def distribute_cards(a_game: str):
         player_with_monsters(a_game)
         player_with_rooms(a_game)
         player_with_victims(a_game)
+        
     return {"cards distributes"}
+

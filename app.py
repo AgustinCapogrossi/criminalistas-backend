@@ -314,12 +314,15 @@ async def end_turn(player_name, game_name):
     Returns: \n
         str: Verification text.
     """
-    if (
-        player_exist(player_name)
-        and game_exist(game_name)
-        and player_is_in_turn(player_name)
-        and is_started(game_name)
-    ):
+    if not game_exist(game_name):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
+    elif not player_exist(player_name):
+        raise HTTPException(status_code=404, detail="player doesn't exist")
+    elif not is_started(game_name):
+        raise HTTPException(status_code=404, detail="game has not started yet")
+    elif not player_is_in_turn(player_name):
+        raise HTTPException(status_code=404, detail="player is already not in turn")
+    else:
         disable_turn_to_player(player_name)
         order = get_player_order(player_name)
         my_list = get_all_players()
@@ -333,14 +336,6 @@ async def end_turn(player_name, game_name):
         for i in range(0, len(my_new_list), 1):
             if my_new_list[i][5] == order + 1:
                 enable_turn_to_player(my_new_list[i][1])
-    elif not is_started(game_name):
-        raise HTTPException(status_code=404, detail="game has not started yet")
-    elif not player_is_in_turn(player_name):
-        raise HTTPException(status_code=404, detail="player is already not in turn")
-    elif not player_exist(player_name):
-        raise HTTPException(status_code=404, detail="player doesn't exist")
-    elif not game_exist(game_name):
-        raise HTTPException(status_code=404, detail="game doesn't exist")
 
 
 # Gives a number to a player

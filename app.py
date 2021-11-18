@@ -473,7 +473,10 @@ async def select_envelope(game_name):
     Returns: \n
         str: Verification text.
     """
-    envelope(game_name)
+    if not game_exist(game_name):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
+    else:
+        envelope(game_name)
     return {"Monster, Victim and Room Successfully selected."}
 
 

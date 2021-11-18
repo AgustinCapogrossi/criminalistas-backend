@@ -1,9 +1,6 @@
 from fastapi.testclient import TestClient
 from database import *
-from starlette.middleware.cors import CORSMiddleware
 from app import app
-import random
-import string
 
 client = TestClient(app)
 
@@ -132,9 +129,6 @@ def test_show_players_bad():
         headers={"accept": "application/json"},
     )
     assert response.status_code == 404
-
-
-# ??????????????????SUSPICION???????????????????????????
 
 # -------------------------------SET PIECE POSITION-------------------
 def test_set_piece_position():

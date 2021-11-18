@@ -245,12 +245,12 @@ async def start_the_game(game_to_start: str):
     Returns: \n
         str: Verification text.
     """
-    if is_started(game_to_start):
-        raise HTTPException(status_code=404, detail="game is already started")
+    if not game_exist(game_to_start):
+        raise HTTPException(status_code=404, detail="game doesn't exist")
     elif get_number_player(game_to_start) < 2:
         raise HTTPException(status_code=404, detail="not enough players to start game")
-    elif not game_exist(game_to_start):
-        raise HTTPException(status_code=404, detail="game doesn't exist")
+    elif is_started(game_to_start):
+        raise HTTPException(status_code=404, detail="game is already started")
     else:
         start_game(game_to_start)
         host_name = get_game_host(game_to_start)

@@ -208,3 +208,37 @@ def test_exit_game():
                              headers={"accept": "application/json"},
                              )
     assert response.status_code == 200
+
+#bad exit game player not exist
+
+def test_exit_game_bad():
+    response = client.delete("/game/exitgame?player_to_exit=baduser",
+                            headers={"accept": "application/json"},
+    )
+
+    assert response.status_code == 404
+
+#-----------------------------------START_THE_GAME-----------------------------
+
+
+#start game successful
+
+def test_start_game():
+    response = client.post("/game/start_game?game_to_start=game",
+                           headers={"accept":"application/json"},)
+    assert response.status_code == 200
+
+#bad start game (game is started)
+
+def test_start_game_bad_started():
+    response = client.post("/game/start_game?game_to_start=game",
+                           headers={"accept":"application/json"},)
+    assert response.status_code == 404
+
+#bad start game (game not exist)
+
+def test_start_game_bad_not_exist():
+    response = client.post("/game/start_game?game_to_start=badgame",
+                           headers={"accept":"application/json"},
+                           )
+    assert response.status_code == 404

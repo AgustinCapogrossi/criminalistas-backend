@@ -54,8 +54,10 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int):
         data = await websocket.receive_text()
         await manager.broadcast(f"Client {client_id}: {data}")
 
+
 # ----------------------------------------- USER -----------------------------------------
 # Creates a Nickname
+
 
 @app.post("/user/creationuser", tags=["User Methods"], status_code=200)
 async def user_creation(user_to_create: str):
@@ -377,12 +379,15 @@ async def show_players(game_name):
             if my_list[i][4] == game_id:
                 my_new_list.append(my_list[i])
         return my_new_list
-      
+
+
 @app.post("/cards/suspicion", tags=["Cards Methods"])
 async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
-    if not player_is_in_turn(player_who_suspects):
+    if not player_exist(player_who_suspects):
+        raise HTTPException(status_code=404, detail="player doesn't exist.")
+    elif not player_is_in_turn(player_who_suspects):
         raise HTTPException(status_code=404, detail="player is not in turn")
-    if not card_monster_exist(monster_card):
+    elif not card_monster_exist(monster_card):
         raise HTTPException(status_code=404, detail="monster card doesn't exist")
     elif not card_room_exist(room_card):
         raise HTTPException(status_code=404, detail="room card doesn't exist")
@@ -390,6 +395,26 @@ async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
         raise HTTPException(status_code=404, detail="victim card doesn't exist")
     else:
         return suspect(player_who_suspects, monster_card, victim_card, room_card)
+
+
+@app.post("/cards/accusation", tags=["Cards Methods"])
+async def accusation(player_who_accuse, monster_card, victim_card, room_card):
+    if not player_exist(player_who_accuse):
+        raise HTTPException(status_code=404, detail="player doesn't exist.")
+    elif not player_is_in_turn(player_who_accuse):
+        raise HTTPException(status_code=404, detail="player is not in turn")
+    elif not card_monster_exist(monster_card):
+        raise HTTPException(status_code=404, detail="monster card doesn't exist")
+    elif not card_room_exist(room_card):
+        raise HTTPException(status_code=404, detail="room card doesn't exist")
+    elif not card_victims_exist(victim_card):
+        raise HTTPException(status_code=404, detail="victim card doesn't exist")
+    else:
+        accuse(player_who_accuse, monster_card, victim_card, room_card)
+        if player_is_winner(player_who_accuse):
+            return {"The player won the game!"}
+        else:
+            return {"The player lost the game!"}
 
 
 @app.post("/player/set_position_and_piece", tags=["Player Methods"])
@@ -402,7 +427,7 @@ async def set_piece_position(player_name):
 
     Raises: \n
         HTTPException: The player does not exist. \n
-        
+
     Returns: \n
         str: Verification text.
     """
@@ -425,7 +450,7 @@ async def moving_player(player_name: str, direction: str):
         HTTPException: The player does not exist. \n
         HTTPException: AWSD keys were not entered.\n
         HTTPException: The player doesn't have any moves left.\n
-        
+
     Returns: \n
         str: Verification text.
     """
@@ -492,6 +517,5 @@ async def distribute_cards(a_game: str):
         player_with_monsters(a_game)
         player_with_rooms(a_game)
         player_with_victims(a_game)
-        
-    return {"cards distributes"}
 
+    return {"cards distributes"}

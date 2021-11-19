@@ -29,6 +29,8 @@ class Player(db.Entity):
     piece = Optional(str)
     player_x = Optional(int)
     player_y = Optional(int)
+    is_winner = Optional(bool)
+    is_loser = Optional(bool)
 
 
 # Game Table
@@ -217,6 +219,8 @@ def new_player(name_player, name_game):
         game=get_game(name_game),
         dice_number=0,
         turn=False,
+        is_winner=False,
+        is_loser=False,
     )
 
 
@@ -230,6 +234,8 @@ def new_player_host(name_player, name_game):
         game=get_game(name_game),
         dice_number=0,
         turn=False,
+        is_winner=False,
+        is_loser=False,
     )
 
 
@@ -415,6 +421,11 @@ def get_next_player_name(un_player):
         if my_new_list[i][5] == order + 1:
             next_name = get_player(my_new_list[i][1])
     return next_name
+
+
+@db_session
+def player_is_winner(player_name):
+    return Player.get(name=player_name).is_winner
 
 
 # ----------------------------------------- CARDS -----------------------------------------
@@ -846,7 +857,7 @@ def get_room_card():
 def get_monster_card_envelope(monster_card):
     card_list = get_monster_card()
     new_card_list = []
-    game_name = get_monster_game(monster_card)
+    game_name = get_monster_game(monster_card).name
     game_id = get_game_id(game_name)
     # Returns cards from game#
     for i in range(0, len(card_list), 1):
@@ -862,7 +873,7 @@ def get_monster_card_envelope(monster_card):
 def get_victim_card_envelope(victim_card):
     card_list = get_victim_card()
     new_card_list = []
-    game_name = get_victim_game(victim_card)
+    game_name = get_victim_game(victim_card).name
     game_id = get_game_id(game_name)
     # Returns cards from game#
     for i in range(0, len(card_list), 1):
@@ -878,7 +889,7 @@ def get_victim_card_envelope(victim_card):
 def get_room_card_envelope(room_card):
     card_list = get_room_card()
     new_card_list = []
-    game_name = get_room_game(room_card)
+    game_name = get_room_game(room_card).name
     game_id = get_game_id(game_name)
     # Returns cards from game#
     for i in range(0, len(card_list), 1):
@@ -974,22 +985,25 @@ def suspect(player_who_suspects, monster_card, victim_card, room_card):
 
 # Accusation
 @db_session
-def accuse(player_who_suspects, monster_card, victim_card, room_card):
+def accuse(player_who_accuse, monster_card, victim_card, room_card):
     monster_id = get_monster_id(monster_card)
     victim_id = get_victim_id(victim_card)
     room_id = get_room_id(room_card)
+    my_player = Player.get(name=player_who_accuse)
 
     envelope_monster = get_monster_card_envelope(monster_card)
     envelope_victim = get_victim_card_envelope(victim_card)
     envelope_room = get_room_card_envelope(room_card)
 
     if (
-        monster_id == get_monster_id(envelope_monster)
-        and victim_id == get_victim_id(envelope_victim)
-        and room_id == get_room_id(envelope_room)
+        monster_id == get_monster_id(envelope_monster[1])
+        and victim_id == get_victim_id(envelope_victim[1])
+        and room_id == get_room_id(envelope_room[1])
     ):
+        my_player.set(is_winner=True)
         print("Winner")
     else:
+        my_player.set(is_loser=True)
         print("Loser")
     return envelope_monster, envelope_victim, envelope_room
 

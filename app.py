@@ -1,3 +1,4 @@
+from asyncio.streams import start_server
 from fastapi import FastAPI, WebSocket
 from fastapi import Depends, HTTPException, status
 from typing import List
@@ -5,6 +6,9 @@ from fastapi.responses import HTMLResponse
 from database import *
 from pydantic_models import *
 from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+import websockets
+from fastapi.websockets import WebSocket
 
 MAX_LEN_NAME_GAME = 10
 MIN_LEN_NAME_GAME = 3
@@ -31,29 +35,62 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # ----------------------------------------- WEBSOCKET -----------------------------------------
-class ConnectionManager:
-    def __init__(self):
-        self.connections: List[WebSocket] = []
+# class ConnectionManager:
+#     def __init__(self):
+#         self.connections: List[WebSocket] = []
 
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.connections.append(websocket)
+#     async def connect(self, websocket: WebSocket):
+#         await websocket.accept()
+#         self.connections.append(websocket)
 
-    async def broadcast(self, data: str):
-        for connection in self.connections:
-            await connection.send_text(data)
-
-
-manager = ConnectionManager()
+#     async def broadcast(self, data: str):
+#         for connection in self.connections:
+#             await connection.send_text(data)
 
 
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int):
-    await manager.connect(websocket)
-    while True:
-        data = await websocket.receive_text()
-        await manager.broadcast(f"Client {client_id}: {data}")
+# manager = ConnectionManager()
 
+
+# @app.websocket("/ws/{client_id}")
+# async def websocket_endpoint(websocket: WebSocket, client_id: int):
+#     await manager.connect(websocket)
+#     while True:
+#         data = await websocket.receive_text()
+#         await manager.broadcast(f"Client {client_id}: {data}")
+
+
+# connected = set()
+
+
+# @app.websocket("/ws")
+# @app.get("/ws")
+# async def websocket_endpoint(websocket: WebSocket):
+#     print("a new websocket to create.")
+#     await websocket.accept()
+#     while True:
+#         try:
+#             # Wait for any message from the client
+#             await websocket.receive_text()
+#             # Send message to the client
+#             resp = {"value": random.uniform(0, 1)}
+#             await websocket.send_json(resp)
+#         except Exception as e:
+#             print("error:", e)
+#             break
+#     print("Bye..")
+
+
+# async def server(websocket, path):  # El path es por ejemplo localhost:3000/test
+#     while True:
+#         need_update = await websocket.recv()
+#         print("socket executed")
+#         await websocket.send(need_update)
+
+
+# start_server = websockets.serve(server, "localhost", 3000)
+
+# asyncio.get_event_loop().run_until_complete(start_server)
+# asyncio.get_event_loop().run_forever()
 
 # ----------------------------------------- USER -----------------------------------------
 # Creates a Nickname
@@ -127,7 +164,6 @@ async def game_creation(game_name: str, game_creator: str):
     Returns: \n
         str: Verification text.
     """
-
     invalid_fields = HTTPException(status_code=404, detail="field size is invalid")
     if len(game_name) > MAX_LEN_NAME_GAME or len(game_name) < MIN_LEN_NAME_GAME:
         raise invalid_fields
@@ -141,6 +177,7 @@ async def game_creation(game_name: str, game_creator: str):
         is_full = False
         is_started = False
         new_game(game_name, game_creator)
+        accept_conection_game(game_name)
         new_player_host(game_creator, game_name)
         insert_player(game_name, game_creator)
         add_player(game_name)

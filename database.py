@@ -2,6 +2,8 @@ from pony.orm import *
 import sqlite3
 import random
 
+from starlette.websockets import WebSocket
+
 db = pony.orm.Database()
 
 
@@ -45,6 +47,7 @@ class Game(db.Entity):
     cards_monsters = Set("Cards_Monsters", cascade_delete=True)
     cards_rooms = Set("Cards_Rooms", cascade_delete=True)
     cards_victims = Set("Cards_Victims", cascade_delete=True)
+    stream = Required(WebSocket)
 
 
 # Game Cards
@@ -82,7 +85,13 @@ db.generate_mapping(create_tables=True)
 def new_game(new_name, creator):
     Game(
         name=new_name, host_name=creator, is_started=False, is_full=False, num_players=0
-    )
+    ).stream.open()
+
+
+@db_session
+def accept_conection_game(name_game):
+    mygame = Game.get(name=name_game)
+    mygame.accept()
 
 
 @db_session

@@ -383,6 +383,7 @@ async def show_players(game_name):
 
 @app.post("/cards/suspicion", tags=["Cards Methods"])
 async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
+
     if not player_exist(player_who_suspects):
         raise HTTPException(status_code=404, detail="player doesn't exist.")
     elif not player_is_in_turn(player_who_suspects):

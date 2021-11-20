@@ -529,20 +529,41 @@ def envelope(game):
 
 # -------------------------Returns card ID------------------------#
 
+# me obtiene todas las cartas monster de un juego especifico
+@db_session
+def get_monster_id(card, gameId):
+    card_list = get_monster_card()
+    new_card_list = []
+    for i in range(0, len(card_list), 1):
+        if card_list[i][4] == gameId:
+            new_card_list.append(card_list[i])
+    for i in range(0, len(new_card_list), 1):
+        if new_card_list[i][1] == str(card):
+            return new_card_list[i][0]
+
 
 @db_session
-def get_monster_id(card):
-    return Cards_Monsters.get(name=card).id
+def get_victim_id(card, gameId):
+    card_list = get_victim_card()
+    new_card_list = []
+    for i in range(0, len(card_list), 1):
+        if card_list[i][4] == gameId:
+            new_card_list.append(card_list[i])
+    for i in range(0, len(new_card_list), 1):
+        if new_card_list[i][1] == str(card):
+            return new_card_list[i][0]
 
 
 @db_session
-def get_victim_id(card):
-    return Cards_Victims.get(name=card).id
-
-
-@db_session
-def get_room_id(card):
-    return Cards_Rooms.get(name=card).id
+def get_room_id(card, gameId):
+    card_list = get_room_card()
+    new_card_list = []
+    for i in range(0, len(card_list), 1):
+        if card_list[i][4] == gameId:
+            new_card_list.append(card_list[i])
+    for i in range(0, len(new_card_list), 1):
+        if new_card_list[i][1] == str(card):
+            return new_card_list[i][0]
 
 
 # ----------------------------------------------------------------#
@@ -569,19 +590,42 @@ def get_card_victims(id_card):
 
 @db_session
 def card_monster_exist(card):
-    if Cards_Monsters.get(name=card) is not None:
+    if (
+        str(card) == "Dŕacula"
+        or str(card) == "Frankenstein"
+        or str(card) == "Hombre Lobo"
+        or str(card) == "Fantasma"
+        or str(card) == "Momia"
+        or str(card) == "Dr Jekyll Mr. Hyde"
+    ):
         return True
 
 
 @db_session
 def card_victims_exist(card):
-    if Cards_Victims.get(name=card) is not None:
+    if (
+        str(card) == "Conde"
+        or str(card) == "Condesa"
+        or str(card) == "Ama de Llaves"
+        or str(card) == "Mayordomo"
+        or str(card) == "Doncella"
+        or str(card) == "Jardinero"
+    ):
         return True
 
 
 @db_session
 def card_room_exist(card):
-    if Cards_Rooms.get(name=card) is not None:
+    if (
+        str(card) == "Cochera"
+        or str(card) == "Alcoba"
+        or str(card) == "Biblioteca"
+        or str(card) == "Panteón"
+        or str(card) == "Vestíbulo"
+        or str(card) == "Bodega"
+        or str(card) == "Salón"
+        or str(card) == "Laboratorio"
+    ):
         return True
 
 
@@ -854,14 +898,12 @@ def get_room_card():
 
 
 @db_session
-def get_monster_card_envelope(monster_card):
+def get_monster_card_envelope(gameId):
     card_list = get_monster_card()
     new_card_list = []
-    game_name = get_monster_game(monster_card).name
-    game_id = get_game_id(game_name)
     # Returns cards from game#
     for i in range(0, len(card_list), 1):
-        if card_list[i][4] == game_id:
+        if card_list[i][4] == gameId:
             new_card_list.append(card_list[i])
     # Returns card in envelope#
     for i in range(0, len(new_card_list), 1):
@@ -870,14 +912,12 @@ def get_monster_card_envelope(monster_card):
 
 
 @db_session
-def get_victim_card_envelope(victim_card):
+def get_victim_card_envelope(gameId):
     card_list = get_victim_card()
     new_card_list = []
-    game_name = get_victim_game(victim_card).name
-    game_id = get_game_id(game_name)
     # Returns cards from game#
     for i in range(0, len(card_list), 1):
-        if card_list[i][4] == game_id:
+        if card_list[i][4] == gameId:
             new_card_list.append(card_list[i])
     # Returns card in envelope#
     for i in range(0, len(new_card_list), 1):
@@ -886,14 +926,12 @@ def get_victim_card_envelope(victim_card):
 
 
 @db_session
-def get_room_card_envelope(room_card):
+def get_room_card_envelope(gameId):
     card_list = get_room_card()
     new_card_list = []
-    game_name = get_room_game(room_card).name
-    game_id = get_game_id(game_name)
     # Returns cards from game#
     for i in range(0, len(card_list), 1):
-        if card_list[i][4] == game_id:
+        if card_list[i][4] == gameId:
             new_card_list.append(card_list[i])
     # Returns card in envelope#
     for i in range(0, len(new_card_list), 1):
@@ -986,19 +1024,15 @@ def suspect(player_who_suspects, monster_card, victim_card, room_card):
 # Accusation
 @db_session
 def accuse(player_who_accuse, monster_card, victim_card, room_card):
-    monster_id = get_monster_id(monster_card)
-    victim_id = get_victim_id(victim_card)
-    room_id = get_room_id(room_card)
+    game_id = get_player_game(player_who_accuse)
     my_player = Player.get(name=player_who_accuse)
-
-    envelope_monster = get_monster_card_envelope(monster_card)
-    envelope_victim = get_victim_card_envelope(victim_card)
-    envelope_room = get_room_card_envelope(room_card)
-
+    envelope_monster = get_monster_card_envelope(game_id)
+    envelope_victim = get_victim_card_envelope(game_id)
+    envelope_room = get_room_card_envelope(game_id)
     if (
-        monster_id == get_monster_id(envelope_monster[1])
-        and victim_id == get_victim_id(envelope_victim[1])
-        and room_id == get_room_id(envelope_room[1])
+        envelope_monster[1] == monster_card
+        and envelope_victim[1] == victim_card
+        and envelope_room[1] == room_card
     ):
         my_player.set(is_winner=True)
         print("Winner")

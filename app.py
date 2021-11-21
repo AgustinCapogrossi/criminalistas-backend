@@ -6,9 +6,9 @@ from database import *
 from pydantic_models import *
 from fastapi.middleware.cors import CORSMiddleware
 
-MAX_LEN_NAME_GAME = 10
+MAX_LEN_NAME_GAME = 20
 MIN_LEN_NAME_GAME = 3
-MAX_LEN_NAME_NICK = 10
+MAX_LEN_NAME_NICK = 20
 MIN_LEN_NAME_NICK = 3
 
 
@@ -383,7 +383,24 @@ async def show_players(game_name):
 
 @app.post("/cards/suspicion", tags=["Cards Methods"])
 async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
+    """It allows the user to suspect the next player and get information about their cards
 
+    Args:
+        player_who_suspects (str): Player who is in turn
+        monster_card (str): Monster card name
+        victim_card (str): Victim card name
+        room_card (str): Room card name
+
+    Raises:
+        HTTPException: Player doesn't exist.
+        HTTPException: Player isn't in turn.
+        HTTPException: Monster card doesn't exist.
+        HTTPException: Room card doesn't exist.
+        HTTPException: Victim card doesn't exist.
+
+    Returns:
+        List: A list containing every card that matches from the player whose turn is the closest in the game
+    """
     if not player_exist(player_who_suspects):
         raise HTTPException(status_code=404, detail="player doesn't exist.")
     elif not player_is_in_turn(player_who_suspects):
@@ -400,6 +417,24 @@ async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
 
 @app.post("/cards/accusation", tags=["Cards Methods"])
 async def accusation(player_who_accuse, monster_card, victim_card, room_card):
+    """It allows the player to make an accusation, should it be correct said player will be the winner, otherwise he loses
+
+    Args:
+        player_who_accuse ([type]): Name of the player in turn.
+        monster_card ([type]): Name of the monster card.
+        victim_card ([type]): Name of the victim card.
+        room_card ([type]): Name of the room card.
+
+    Raises:
+        HTTPException: Player doesn't exist.
+        HTTPException: Player isn't in turn.
+        HTTPException: Monster card doesn't exist.
+        HTTPException: Room card doesn't exist.
+        HTTPException: Victim card doesn't exist.
+
+    Returns:
+        Validation text: Whether the accusation is correct or not
+    """
     if not player_exist(player_who_accuse):
         raise HTTPException(status_code=404, detail="player doesn't exist.")
     elif not player_is_in_turn(player_who_accuse):
@@ -416,6 +451,24 @@ async def accusation(player_who_accuse, monster_card, victim_card, room_card):
             return {"The player won the game!"}
         else:
             return {"The player lost the game!"}
+
+
+@app.post("/cards/show_envelope", tags=["Cards Methods"])
+async def show_envelope_cards(player_name):
+    """Shows the cards in the envelope
+
+    Args:
+        player_name (str): Name of the player
+
+    Returns:
+        str: Cards in envelope
+    """
+    game_id = get_player_game(player_name)
+    return (
+        get_monster_card_envelope(game_id),
+        get_victim_card_envelope(game_id),
+        get_room_card_envelope(game_id),
+    )
 
 
 @app.post("/player/set_position_and_piece", tags=["Player Methods"])
@@ -512,6 +565,17 @@ async def select_envelope(game_name):
 
 @app.post("/cards/distribute_cards", tags=["Cards Methods"])
 async def distribute_cards(a_game: str):
+    """Distributes the cards in the database amongst the players
+
+    Args:
+        a_game (str): Name of the game
+
+    Raises:
+        HTTPException: Game doesn't exist
+
+    Returns:
+        str: Validation text.
+    """
     if not game_exist(a_game):
         raise HTTPException(status_code=404, detail="game doesn't exist")
     else:

@@ -653,17 +653,17 @@ def get_room_game(card):
 
 
 @db_session
-def get_monster_player(card):
+def get_monster_player_id(card):
     return Cards_Monsters.get(name=card).player.id
 
 
 @db_session
-def get_victim_player(card):
+def get_victim_player_id(card):
     return Cards_Victims.get(name=card).player.id
 
 
 @db_session
-def get_room_player(card):
+def get_room_player_id(card):
     return Cards_Rooms.get(name=card).player.id
 
 
@@ -945,80 +945,92 @@ def get_room_card_envelope(gameId):
 # Suspects
 @db_session
 def suspect(player_who_suspects, monster_card, victim_card, room_card):
-    name = player_who_suspects
-    order = get_player_order(name)
-    game = get_player_game_name(name)
+    # Comparar los id, contar similitudes, cambiar los valores de booleans
 
-    # Compare next player's id with cards from suspicion id#
-    while order + 1 < get_number_player(game) - 1:
+    # Conseguir el id de las cartas dadas por el jugador
+    # *********************************************#
+    game = get_player_game_name(player_who_suspects)
+    game_id = get_player_game(player_who_suspects)
+    monster_id = get_monster_id(monster_card, game_id)
+    victim_id = get_victim_id(victim_card, game_id)
+    room_id = get_room_id(room_card, game_id)
+    # *********************************************#
 
-        next_id = get_next_player_id(name)
-        next_order = get_next_player_order(name)
+    # Conseguir todas las cartas en juego de la partida
+    # *********************************************#
+    list_monster_cards = get_monster_card()
+    list_victim_cards = get_victim_card()
+    list_room_cards = get_room_card()
 
-        monster_player = get_monster_player(monster_card)
-        victim_player = get_victim_player(victim_card)
-        room_player = get_room_player(room_card)
+    new_list_monster_cards = []
+    new_list_victim_cards = []
+    new_list_room_cards = []
 
-        # See how many cards coincide#
-        similarities = 0
+    for i in range(0, len(list_monster_cards), 1):
+        if list_monster_cards[i][4] == game_id:
+            new_list_monster_cards.append(list_monster_cards[i])
+    for i in range(0, len(list_victim_cards), 1):
+        if list_victim_cards[i][4] == game_id:
+            new_list_victim_cards.append(list_victim_cards[i])
+    for i in range(0, len(list_room_cards), 1):
+        if list_room_cards[i][4] == game_id:
+            new_list_room_cards.append(list_room_cards[i])
+    # *********************************************#
 
-        is_monster = False
-        is_victim = False
-        is_room = False
+    # Eliminar las cartas que esten en el sobre
+    # *********************************************#
+    new_list_monster_cards_envelope = []
+    new_list_victim_cards_envelope = []
+    new_list_room_cards_envelope = []
 
-        if monster_player == next_id:
-            similarities = similarities + 1
-            is_monster = True
-        if victim_player == next_id:
-            similarities = similarities + 1
-            is_victim = True
-        if room_player == next_id:
-            similarities = similarities + 1
-            is_room = True
-        # If no cards coincide skip the turn#
-        if similarities == 0:
-            name = get_next_player_name(name)
-        # If only one card coincides show it #
-        if similarities == 1:
-            if is_monster:
-                monster_list = get_monster_card()
-                card_id = get_monster_id(monster_card)
-                for i in range(0, len(monster_list), 1):
-                    if monster_list[i][0] == card_id:
-                        return monster_list[i]
-            elif is_victim:
-                victim_list = get_victim_card()
-                card_id = get_victim_id(victim_card)
-                for i in range(0, len(victim_list), 1):
-                    if victim_list[i][0] == card_id:
-                        return victim_list[i]
-            elif is_room:
-                room_list = get_room_card()
-                card_id = get_room_id(room_card)
-                for i in range(0, len(room_list), 1):
-                    if room_list[i][0] == card_id:
-                        return room_list[i]
-        # If more than one card coincides let the player choose which one to show#
-        if similarities > 1:
-            if is_monster:
-                monster_list = get_monster_card()
-                card_id = get_monster_id(monster_card)
-                for i in range(0, len(monster_list), 1):
-                    if monster_list[i][0] == card_id:
-                        monster_card = monster_list[i]
-            if is_victim:
-                victim_list = get_victim_card()
-                card_id = get_victim_id(victim_card)
-                for i in range(0, len(victim_list), 1):
-                    if victim_list[i][0] == card_id:
-                        victim_card = victim_list[i]
-            if is_room:
-                room_list = get_room_card()
-                card_id = get_room_id(room_card)
-                for i in range(0, len(room_list), 1):
-                    if room_list[i][0] == card_id:
-                        room_card = room_list[i]
-            return monster_card, victim_card, room_card
+    for i in range(0, len(new_list_monster_cards), 1):
+        if new_list_monster_cards[i][3] == 0:
+            new_list_monster_cards_envelope.append(new_list_monster_cards[i])
+    for i in range(0, len(new_list_victim_cards), 1):
+        if new_list_victim_cards[i][3] == 0:
+            new_list_victim_cards_envelope.append(new_list_victim_cards[i])
+    for i in range(0, len(new_list_room_cards), 1):
+        if new_list_room_cards[i][3] == 0:
+            new_list_room_cards_envelope.append(new_list_room_cards[i])
+    # *********************************************#
+
+    # Conseguir los jugadores que tienen las cartas de la sospecha
+    # *********************************************#
+    suspicion = []
+    for i in range(0, len(new_list_monster_cards_envelope), 1):
+        if new_list_monster_cards_envelope[i][0] == monster_id:
+            suspicion.append(new_list_monster_cards_envelope[i])
+    for i in range(0, len(new_list_victim_cards_envelope), 1):
+        if new_list_victim_cards_envelope[i][0] == victim_id:
+            suspicion.append(new_list_victim_cards_envelope[i])
+    for i in range(0, len(new_list_room_cards_envelope), 1):
+        if new_list_room_cards_envelope[i][0] == room_id:
+            suspicion.append(new_list_room_cards_envelope[i])
+    print(suspicion)
+    # *********************************************#
+
+    # Filtrar por orden del jugador mas cercano al que sospecha
+    # *********************************************#
+    min = float("inf")
+    print("Player is", get_player_id(player_who_suspects))
+    for i in range(0, len(suspicion), 1):
+        print("Suspicion is", suspicion[i][5])
+        if suspicion[i][5] < min and suspicion[i][5] > get_player_id(
+            player_who_suspects
+        ):
+            min = suspicion[i][5]
+    if min == float("inf"):
+        for i in range(0, len(suspicion), 1):
+            print(min)
+            if suspicion[i][5] < min and suspicion[i][5] != get_player_id(
+                player_who_suspects
+            ):
+                min = suspicion[i][5]
+    new_suspicion = []
+    for i in range(0, len(suspicion), 1):
+        if suspicion[i][5] == min:
+            new_suspicion.append(suspicion[i])
+    return new_suspicion
 
 
 # Accusation

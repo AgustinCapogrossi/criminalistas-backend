@@ -69,9 +69,20 @@ def test_bad_distribute_cards():
     assert response.json() == {"detail": "game doesn't exist"}
 
 
-# ??????????????????SUSPICION???????????????????????????
+#------------------SUSPICION------------------------------
 
+def test_suspicion():
+    response = client.post(
+        "/cards/suspicion?player_who_suspects=testuser0&monster_card=Frankenstein&victim_card=Conde&room_card=Cochera"
+    )
+    assert response.status_code == 200
 
+#---------------------ACCUSATION-----------------------
+def test_accusation():
+    response = client.post(
+        "/cards/accusation?player_who_accuse=testuser0&monster_card=Frankenstein&victim_card=Conde&room_card=Cochera"
+    )
+    assert response.status_code == 200
 # ---------------------------ELIMINATION OF EXCESS DATA----------------------------
 
 

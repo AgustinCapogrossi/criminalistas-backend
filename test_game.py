@@ -60,7 +60,7 @@ def test_create_gamebad_maxlen():
         "user/creationuser?user_to_create=usergame1",
         headers={"accept": "application/json"},
     )
-    rstr = get_random_string(12)
+    rstr = get_random_string(25)
     response = client.post(
         "game/creationgame?game_name={}&game_creator=usergame1".format(rstr),
         headers={"accept": "application/json"},

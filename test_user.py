@@ -39,7 +39,7 @@ def test_creation_user_exist():
 
 # Bad Creaton user max len
 def test_creation_user_maxlen():
-    rstr = get_random_string(12)
+    rstr = get_random_string(25)
     register = client.post(
         "/user/creationuser?user_to_create={}".format(rstr),
         headers={'accept':'application/json'}

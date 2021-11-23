@@ -42,15 +42,14 @@ async def websocket_endpoint(websocket: WebSocket, game_name: str, player_name: 
     When the connection is accepted, Broadcast to all players in the game match, letting them know that a new player has joined.
     Parameters:
         websocket (WebSocket): is the socket connection.
-        gameID (int): ID of game
-        playerID (int): ID of player
+        game_name (int): name of game
+        player_name (int): name of player
     Returns:
         Broadcast to all players in the game match, letting them know that a new player has joined. It Sends an updated list of player nicknames in the game.
         {'joinPlayerEvent' : [player1.nickname, player2.nickname, ...]}
     Example of use:
         ws://127.0.0.1:8000/ws/1/5/
     """
-    print("////////////////////////////////////////")
     await manager.connect(websocket, game_name, player_name)
     try:
         out = player_in_game(game_name, player_name)
@@ -58,7 +57,7 @@ async def websocket_endpoint(websocket: WebSocket, game_name: str, player_name: 
             await manager.disconnect(game_name, player_name)
             return
 
-        listOfPlayers = get_players(game_name)
+        listOfPlayers = get_players_nickname(game_name)
         print(listOfPlayers)
         # broadcast JoinPlayerEvent
         msg = {"joinPlayerEvent": listOfPlayers}
@@ -284,8 +283,8 @@ async def start_the_game(game_to_start: str, name_player: str):
         await manager.broadcast_json(game_to_start, {"fixHostNameEvent": host_name})
 
         enable_turn_to_player(host_name)
-        generate_cards(game_to_start)
         player_position_and_piece(game_to_start)
+        generate_cards(game_to_start)
         envelope(game_to_start)
         player_with_monsters(game_to_start)
         player_with_rooms(game_to_start)
@@ -431,10 +430,9 @@ async def dice_number(player_name, game_name):
             game_name,
             {"throwDice", f"Player {player_name} got the number {dice}."},
         )
-        return dice
     else:
         raise HTTPException(status_code=404, detail="game doesn't exist")
-
+    return dice
 
 # Shows Player
 
@@ -458,23 +456,21 @@ async def show_players(game_name):
         return my_new_list
 
 
-@app.post("/cards/suspicion", tags=["Cards Methods"])
-async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
+async def suspicion(
+    game_name, player_who_suspects, monster_card, victim_card, room_card
+):
     """It allows the user to suspect the next player and get information about their cards
-
     Args:
         player_who_suspects (str): Player who is in turn
         monster_card (str): Monster card name
         victim_card (str): Victim card name
         room_card (str): Room card name
-
     Raises:
         HTTPException: Player doesn't exist.
         HTTPException: Player isn't in turn.
         HTTPException: Monster card doesn't exist.
         HTTPException: Room card doesn't exist.
         HTTPException: Victim card doesn't exist.
-
     Returns:
         List: A list containing every card that matches from the player whose turn is the closest in the game
     """
@@ -489,7 +485,24 @@ async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
     elif not card_victims_exist(victim_card):
         raise HTTPException(status_code=404, detail="victim card doesn't exist")
     else:
-        return suspect(player_who_suspects, monster_card, victim_card, room_card)
+        await manager.broadcast_json(
+            game_name,
+            {
+                "suspectEvent": f"Player {player_who_suspects} thinks that {monster_card} killed {victim_card} in the {room_card}"
+            },
+        )
+        suspicion = suspect(player_who_suspects, monster_card, victim_card, room_card)
+        if len(suspicion) == 0:
+            await manager.broadcast_json(
+                game_name,
+                {"noAnswerSuspectEvent": "No player is able to answer the suspect"},
+            )
+        if len(suspicion) == 1:
+            print("Hola")
+            # Linea 645 a linea 654 en api.py
+        if len(suspicion) > 1:
+            # Linea 645 a linea 654 en api.py
+            print("Hola")
 
 
 @app.post("/cards/accusation", tags=["Cards Methods"])
@@ -618,48 +631,4 @@ async def moving_player(game_name: str, player_name: str, direction: str):
                 raise HTTPException(status_code=404, detail="illegal move")
 
 
-# ----------------------------------------- CARDS -----------------------------------------
 
-# Generate Envelope
-
-
-@app.post("/cards/envelope", tags=["Cards Methods"])
-async def select_envelope(game_name):
-    """Selects The Moster, Victim and Room that will go in the envelope
-    Args: \n
-        select_envelope (str): Name of the game to select the cards. \n
-    Returns: \n
-        str: Verification text.
-    """
-
-    if not game_exist(game_name):
-        raise HTTPException(status_code=404, detail="game doesn't exist")
-    else:
-        envelope(game_name)
-    return {"Monster, Victim and Room Successfully selected."}
-
-
-# Distribute Cards
-
-
-@app.post("/cards/distribute_cards", tags=["Cards Methods"])
-async def distribute_cards(a_game: str):
-    """Distributes the cards in the database amongst the players
-
-    Args:
-        a_game (str): Name of the game
-
-    Raises:
-        HTTPException: Game doesn't exist
-
-    Returns:
-        str: Validation text.
-    """
-    if not game_exist(a_game):
-        raise HTTPException(status_code=404, detail="game doesn't exist")
-    else:
-        player_with_monsters(a_game)
-        player_with_rooms(a_game)
-        player_with_victims(a_game)
-
-    return {"cards distributes"}

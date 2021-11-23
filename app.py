@@ -31,28 +31,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # ----------------------------------------- WEBSOCKET -----------------------------------------
-class ConnectionManager:
-    def __init__(self):
-        self.connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.connections.append(websocket)
-
-    async def broadcast(self, data: str):
-        for connection in self.connections:
-            await connection.send_text(data)
-
-
 manager = ConnectionManager()
 
+@app.websocket("/ws/{gameID}/{playerID}/")
+async def websocket_endpoint(websocket: WebSocket, gameID: int, playerID: int):
+    """
+    Accept socket connection and wait to receive data.
+    When the connection is accepted, Broadcast to all players in the game match, letting them know that a new player has joined.
+    Parameters:
+        websocket (WebSocket): is the socket connection.
+        gameID (int): ID of game
+        playerID (int): ID of player
+    Returns:
+        Broadcast to all players in the game match, letting them know that a new player has joined. It Sends an updated list of player nicknames in the game.
+        {'joinPlayerEvent' : [player1.nickname, player2.nickname, ...]}
+    Example of use:
+        ws://127.0.0.1:8000/ws/1/5/
+    """
+    await manager.connect(websocket, gameID, playerID)
+    try:
+        out = player_in_game(playerID, gameID)
+        if out == False:
+            await manager.disconnect(gameID, playerID)
+            return
 
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int):
-    await manager.connect(websocket)
-    while True:
-        data = await websocket.receive_text()
-        await manager.broadcast(f"Client {client_id}: {data}")
+        with db_session:
+            query = select(game.playersID for game in Game if game.id == gameID)
+            listOfPlayers = [player.nickname for player in query]
+
+        # broadcast JoinPlayerEvent
+        msg = {"joinPlayerEvent": listOfPlayers}
+        await manager.broadcast_json(gameID, msg)
+
+        while True:
+            # Receive data from socket and do nothing
+            data = await websocket.receive_json()
+
+    except WebSocketDisconnect:
+        await manager.disconnect(gameID, playerID)
+        await manager.broadcast_text(gameID, f"Player {playerID} left the Game")
+
 
 
 # ----------------------------------------- USER -----------------------------------------

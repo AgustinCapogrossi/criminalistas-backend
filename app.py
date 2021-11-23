@@ -42,8 +42,8 @@ async def websocket_endpoint(websocket: WebSocket, game_name: str, player_name: 
     When the connection is accepted, Broadcast to all players in the game match, letting them know that a new player has joined.
     Parameters:
         websocket (WebSocket): is the socket connection.
-        gameID (int): ID of game
-        playerID (int): ID of player
+        game_name (int): name of game
+        player_name (int): name of player
     Returns:
         Broadcast to all players in the game match, letting them know that a new player has joined. It Sends an updated list of player nicknames in the game.
         {'joinPlayerEvent' : [player1.nickname, player2.nickname, ...]}
@@ -283,6 +283,7 @@ async def start_the_game(game_to_start: str, name_player: str):
         await manager.broadcast_json(game_to_start, {"fixHostNameEvent": host_name})
 
         enable_turn_to_player(host_name)
+        player_position_and_piece(game_to_start)
         generate_cards(game_to_start)
         envelope(game_to_start)
         player_with_monsters(game_to_start)
@@ -575,48 +576,4 @@ async def moving_player(player_name: str, direction: str):
         )
 
 
-# ----------------------------------------- CARDS -----------------------------------------
 
-# Generate Envelope
-
-
-@app.post("/cards/envelope", tags=["Cards Methods"])
-async def select_envelope(game_name):
-    """Selects The Moster, Victim and Room that will go in the envelope
-    Args: \n
-        select_envelope (str): Name of the game to select the cards. \n
-    Returns: \n
-        str: Verification text.
-    """
-
-    if not game_exist(game_name):
-        raise HTTPException(status_code=404, detail="game doesn't exist")
-    else:
-        envelope(game_name)
-    return {"Monster, Victim and Room Successfully selected."}
-
-
-# Distribute Cards
-
-
-@app.post("/cards/distribute_cards", tags=["Cards Methods"])
-async def distribute_cards(a_game: str):
-    """Distributes the cards in the database amongst the players
-
-    Args:
-        a_game (str): Name of the game
-
-    Raises:
-        HTTPException: Game doesn't exist
-
-    Returns:
-        str: Validation text.
-    """
-    if not game_exist(a_game):
-        raise HTTPException(status_code=404, detail="game doesn't exist")
-    else:
-        player_with_monsters(a_game)
-        player_with_rooms(a_game)
-        player_with_victims(a_game)
-
-    return {"cards distributes"}

@@ -254,6 +254,16 @@ def player_exist(un_player):
 
 
 @db_session
+def player_in_game(player_name, game_name):
+    listPlayers = Game.get(name=game_name).Players
+    for i in range(listPlayers):
+        if listPlayers[i][1] == player_name:
+            return True
+        else:
+            return False
+
+
+@db_session
 def get_all_players():
     try:
         conn = sqlite3.connect("db.mystery")
@@ -316,9 +326,11 @@ def player_set_host(player):
 def get_player_id(player):
     return Player.get(name=player).id
 
+
 @db_session
 def get_player_game(player):
     return Player.get(name=player).game
+
 
 @db_session
 def get_player_game(un_player):

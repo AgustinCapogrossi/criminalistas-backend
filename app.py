@@ -1,9 +1,10 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi import Depends, HTTPException, status
 from typing import List
 from fastapi.responses import HTMLResponse
 from database import *
 from pydantic_models import *
+from connectionManager import *
 from fastapi.middleware.cors import CORSMiddleware
 
 MAX_LEN_NAME_GAME = 20
@@ -33,8 +34,9 @@ app.add_middleware(
 # ----------------------------------------- WEBSOCKET -----------------------------------------
 manager = ConnectionManager()
 
+
 @app.websocket("/ws/{gameID}/{playerID}/")
-async def websocket_endpoint(websocket: WebSocket, gameID: int, playerID: int):
+async def websocket_endpoint(websocket: WebSocket, game_name: str, player_name: str):
     """
     Accept socket connection and wait to receive data.
     When the connection is accepted, Broadcast to all players in the game match, letting them know that a new player has joined.
@@ -48,29 +50,26 @@ async def websocket_endpoint(websocket: WebSocket, gameID: int, playerID: int):
     Example of use:
         ws://127.0.0.1:8000/ws/1/5/
     """
-    await manager.connect(websocket, gameID, playerID)
+    await manager.connect(websocket, game_name, player_name)
     try:
-        out = player_in_game(playerID, gameID)
+        out = player_in_game(player_name, game_name)
         if out == False:
-            await manager.disconnect(gameID, playerID)
+            await manager.disconnect(game_name, player_name)
             return
 
-        with db_session:
-            query = select(game.playersID for game in Game if game.id == gameID)
-            listOfPlayers = [player.nickname for player in query]
+        listOfPlayers = get_players(game_name)
 
         # broadcast JoinPlayerEvent
         msg = {"joinPlayerEvent": listOfPlayers}
-        await manager.broadcast_json(gameID, msg)
+        await manager.broadcast_json(game_name, msg)
 
         while True:
             # Receive data from socket and do nothing
             data = await websocket.receive_json()
 
     except WebSocketDisconnect:
-        await manager.disconnect(gameID, playerID)
-        await manager.broadcast_text(gameID, f"Player {playerID} left the Game")
-
+        await manager.disconnect(game_name, player_name)
+        await manager.broadcast_text(game_name, f"Player {player_name} left the Game")
 
 
 # ----------------------------------------- USER -----------------------------------------
@@ -248,7 +247,7 @@ async def exitgame(player_to_exit: str):
 # Starts a Game
 
 
-@app.post("/game/start_game", tags=["Game Methods"])
+@app.post("/game/{game_to_start}/start_game", tags=["Game Methods"])
 async def start_the_game(game_to_start: str):
     """It switches the state of the selected game to started.
     Args: \n
@@ -262,13 +261,25 @@ async def start_the_game(game_to_start: str):
     """
     if not game_exist(game_to_start):
         raise HTTPException(status_code=404, detail="game doesn't exist")
-    elif get_number_player(game_to_start) < 2:
+    if get_number_player(game_to_start) < 2:
         raise HTTPException(status_code=404, detail="not enough players to start game")
-    elif is_started(game_to_start):
+    if is_started(game_to_start):
         raise HTTPException(status_code=404, detail="game is already started")
+    if not manager.exist_socket_of_player(game_to_start):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"player {game_to_start} doesn't has a socket connection",
+        )
+
     else:
         start_game(game_to_start)
+
+        msg = {"startGameEvent": None}
+        await manager.broadcast_json(game_to_start, msg)
+
         host_name = get_game_host(game_to_start)
+        await manager.broadcast_json(game_to_start, {"fixHostNameEvent": host_name})
+
         enable_turn_to_player(host_name)
         generate_cards(game_to_start)
     return {"game started"}

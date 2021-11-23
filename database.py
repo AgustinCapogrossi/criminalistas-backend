@@ -2,6 +2,8 @@ from pony.orm import *
 import sqlite3
 import random
 
+from pony.thirdparty.compiler.ast import For
+
 db = pony.orm.Database()
 
 
@@ -280,6 +282,42 @@ def get_all_players():
             print("turn: ", row[7])
             print("\n")
             player = [row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]]
+            playerList.append(player)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return playerList
+
+
+@db_session
+def get_all_players_from_game(game):
+    game_id = get_game_id(game)
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        players_game = "SELECT * from Player WHERE `game` = %d" % game_id
+        cursor.execute(players_game)
+        records = cursor.fetchall()
+        playerList = []
+        for row in records:
+            player = [
+                row[0],
+                row[1],
+                row[2],
+                row[3],
+                row[4],
+                row[5],
+                row[6],
+                row[7],
+                row[8],
+                row[9],
+                row[10],
+                row[11],
+                row[12],
+            ]
             playerList.append(player)
             cursor.close()
     except sqlite3.Error as error:
@@ -1069,14 +1107,18 @@ def accuse(player_who_accuse, monster_card, victim_card, room_card):
 
 
 @db_session
-def player_position_and_piece(player_name):
+def player_position_and_piece(game_name):
     players_Pieces = ["azul", "verde", "rojo", "celeste", "amarillo", "rosa"]
     players_Initial_Position = [(6, 0), (6, 19), (13, 0), (13, 19), (19, 13), (19, 6)]
-    player = Player.get(name=player_name)
-    playerOrder = get_player_order(player_name)
-    player.set(player_x=players_Initial_Position[playerOrder][0])
-    player.set(player_y=players_Initial_Position[playerOrder][1])
-    player.set(piece=players_Pieces[playerOrder])
+
+    myPlayerList = get_all_players_from_game(game_name)
+    for i in range(0, len(myPlayerList), 1):
+        player_name = myPlayerList[i][1]
+        player = Player.get(name=player_name)
+        playerOrder = get_player_order(player_name)
+        player.set(player_x=players_Initial_Position[playerOrder][0])
+        player.set(player_y=players_Initial_Position[playerOrder][1])
+        player.set(piece=players_Pieces[playerOrder])
 
 
 @db_session

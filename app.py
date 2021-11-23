@@ -373,7 +373,7 @@ async def end_turn(player_name, game_name):
 # Gives a number to a player
 
 
-@app.post("/player/dice_number", tags=["Player Methods"])
+@app.post("/player/{game_name}/{player_name}/dice_number", tags=["Player Methods"])
 async def dice_number(player_name, game_name):
     """The function generates a random dice number for the player.
     Args: \n
@@ -391,6 +391,7 @@ async def dice_number(player_name, game_name):
         and player_is_in_turn(player_name)
     ):
         dice = random_number_dice(player_name)
+        await manager.broadcast_json(game_name, {"setRollDice": dice})
     else:
         raise HTTPException(status_code=404, detail="game doesn't exist")
     return dice
@@ -418,23 +419,21 @@ async def show_players(game_name):
         return my_new_list
 
 
-@app.post("/cards/suspicion", tags=["Cards Methods"])
-async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
+async def suspicion(
+    game_name, player_who_suspects, monster_card, victim_card, room_card
+):
     """It allows the user to suspect the next player and get information about their cards
-
     Args:
         player_who_suspects (str): Player who is in turn
         monster_card (str): Monster card name
         victim_card (str): Victim card name
         room_card (str): Room card name
-
     Raises:
         HTTPException: Player doesn't exist.
         HTTPException: Player isn't in turn.
         HTTPException: Monster card doesn't exist.
         HTTPException: Room card doesn't exist.
         HTTPException: Victim card doesn't exist.
-
     Returns:
         List: A list containing every card that matches from the player whose turn is the closest in the game
     """
@@ -449,7 +448,24 @@ async def suspicion(player_who_suspects, monster_card, victim_card, room_card):
     elif not card_victims_exist(victim_card):
         raise HTTPException(status_code=404, detail="victim card doesn't exist")
     else:
-        return suspect(player_who_suspects, monster_card, victim_card, room_card)
+        await manager.broadcast_json(
+            game_name,
+            {
+                "suspectEvent": f"Player {player_who_suspects} thinks that {monster_card} killed {victim_card} in the {room_card}"
+            },
+        )
+        suspicion = suspect(player_who_suspects, monster_card, victim_card, room_card)
+        if len(suspicion) == 0:
+            await manager.broadcast_json(
+                game_name,
+                {"noAnswerSuspectEvent": "No player is able to answer the suspect"},
+            )
+        if len(suspicion) == 1:
+            print("Hola")
+            # Linea 645 a linea 654 en api.py
+        if len(suspicion) > 1:
+            # Linea 645 a linea 654 en api.py
+            print("Hola")
 
 
 @app.post("/cards/accusation", tags=["Cards Methods"])

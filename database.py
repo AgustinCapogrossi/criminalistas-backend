@@ -252,6 +252,14 @@ def player_exist(un_player):
     if Player.get(name=un_player) is not None:
         return True
 
+@db_session
+def player_in_game(playerID,gameID):
+    lista = Game.get(id=gameID).Players
+    for i in range(lista):
+        if lista [i][0] == playerID:
+            return True
+        else:
+            return False
 
 @db_session
 def get_all_players():

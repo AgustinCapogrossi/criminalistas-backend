@@ -1,3 +1,4 @@
+from sys import platform
 from pony.orm import *
 import sqlite3
 import random
@@ -345,6 +346,11 @@ def get_player(player):
 
 
 @db_session
+def get_my_player(player):
+    return Player.get(name=player)
+
+
+@db_session
 def player_is_host(player):
     return Player.get(name=player).host
 
@@ -485,7 +491,7 @@ def player_is_winner(player_name):
 @db_session
 def generate_cards(game_name):
     cards_monster = [
-        "Dŕacula",
+        "Drácula",
         "Frankenstein",
         "Hombre Lobo",
         "Fantasma",
@@ -640,7 +646,7 @@ def get_card_victims(id_card):
 @db_session
 def card_monster_exist(card):
     if (
-        str(card) == "Dŕacula"
+        str(card) == "Drácula"
         or str(card) == "Frankenstein"
         or str(card) == "Hombre Lobo"
         or str(card) == "Fantasma"
@@ -1273,6 +1279,44 @@ def is_a_room(
         else:
             i += 1
     return res
+
+
+@db_session
+def get_coordinates_X(player_name, direction):
+    myPlayer = Player.get(name=player_name)
+    my_X = myPlayer.player_x
+    my_Y = myPlayer.player_y
+    if direction == "W" or direction == "w":
+        if is_available(my_X, my_Y + 1):
+            return my_X
+    elif direction == "S" or direction == "s":
+        if is_available(my_X, my_Y - 1):
+            return my_X
+    elif direction == "D" or direction == "d":
+        if is_available(my_X + 1, my_Y):
+            return my_X + 1
+    elif direction == "A" or direction == "a":
+        if is_available(my_X - 1, my_Y):
+            return my_X - 1
+
+
+@db_session
+def get_coordinates_Y(player_name, direction):
+    myPlayer = Player.get(name=player_name)
+    my_X = myPlayer.player_x
+    my_Y = myPlayer.player_y
+    if direction == "W" or direction == "w":
+        if is_available(my_X, my_Y + 1):
+            return my_Y + 1
+    elif direction == "S" or direction == "s":
+        if is_available(my_X, my_Y - 1):
+            return my_Y - 1
+    elif direction == "D" or direction == "d":
+        if is_available(my_X + 1, my_Y):
+            return my_Y
+    elif direction == "A" or direction == "a":
+        if is_available(my_X - 1, my_Y):
+            return my_Y
 
 
 @db_session

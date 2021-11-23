@@ -51,7 +51,7 @@ class ConnectionManager:
         gameID = get_game_id(name_game)
         playerID = get_player_id(name_player)
         game = self.active_connections.get(gameID)
-        if game != None and get_player_game(name_game) != None:
+        if game != None and get_player_thegame(name_player) != None:
             return True
         return False
 

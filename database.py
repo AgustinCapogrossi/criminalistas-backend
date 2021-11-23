@@ -328,7 +328,7 @@ def get_player_id(player):
 
 
 @db_session
-def get_player_game(player):
+def get_player_thegame(player):
     return Player.get(name=player).game
 
 

@@ -35,7 +35,7 @@ app.add_middleware(
 manager = ConnectionManager()
 
 
-@app.websocket("/ws/{gameID}/{playerID}/")
+@app.websocket("/ws/{game_name}/{player_name}/")
 async def websocket_endpoint(websocket: WebSocket, game_name: str, player_name: str):
     """
     Accept socket connection and wait to receive data.
@@ -50,6 +50,7 @@ async def websocket_endpoint(websocket: WebSocket, game_name: str, player_name: 
     Example of use:
         ws://127.0.0.1:8000/ws/1/5/
     """
+    print("////////////////////////////////////////")
     await manager.connect(websocket, game_name, player_name)
     try:
         out = player_in_game(player_name, game_name)
@@ -248,7 +249,7 @@ async def exitgame(player_to_exit: str):
 
 
 @app.post("/game/{game_to_start}/start_game", tags=["Game Methods"])
-async def start_the_game(game_to_start: str):
+async def start_the_game(game_to_start: str, name_player: str):
     """It switches the state of the selected game to started.
     Args: \n
         game_to_start (str): Name of the game of which we're switching it's state. \n
@@ -261,11 +262,13 @@ async def start_the_game(game_to_start: str):
     """
     if not game_exist(game_to_start):
         raise HTTPException(status_code=404, detail="game doesn't exist")
-    if get_number_player(game_to_start) < 2:
+    elif not player_is_host(name_player):
+        raise HTTPException(status_code=404, detail="player not is host")
+    elif get_number_player(game_to_start) < 2:
         raise HTTPException(status_code=404, detail="not enough players to start game")
-    if is_started(game_to_start):
+    elif is_started(game_to_start):
         raise HTTPException(status_code=404, detail="game is already started")
-    if not manager.exist_socket_of_player(game_to_start):
+    elif not manager.exist_socket_of_player(game_to_start, name_player):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"player {game_to_start} doesn't has a socket connection",

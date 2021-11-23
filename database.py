@@ -254,13 +254,9 @@ def player_exist(un_player):
 
 
 @db_session
-def player_in_game(player_name, game_name):
-    listPlayers = Game.get(name=game_name).Players
-    for i in range(listPlayers):
-        if listPlayers[i][1] == player_name:
-            return True
-        else:
-            return False
+def player_in_game(game, player):
+    if get_game_id(game) == get_player_game(player):
+        return True
 
 
 @db_session

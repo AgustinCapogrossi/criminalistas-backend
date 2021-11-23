@@ -53,13 +53,13 @@ async def websocket_endpoint(websocket: WebSocket, game_name: str, player_name: 
     print("////////////////////////////////////////")
     await manager.connect(websocket, game_name, player_name)
     try:
-        out = player_in_game(player_name, game_name)
+        out = player_in_game(game_name, player_name)
         if out == False:
             await manager.disconnect(game_name, player_name)
             return
 
         listOfPlayers = get_players(game_name)
-
+        print(listOfPlayers)
         # broadcast JoinPlayerEvent
         msg = {"joinPlayerEvent": listOfPlayers}
         await manager.broadcast_json(game_name, msg)

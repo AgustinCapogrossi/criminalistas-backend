@@ -702,6 +702,28 @@ def get_players(game):
             conn.close()
     return playerList
 
+@db_session
+def get_players_nickname(game):
+    game_id = get_game_id(game)
+    try:
+        conn = sqlite3.connect("db.mystery")
+        cursor = conn.cursor()
+        player_random = "SELECT name from Player WHERE `game` = %d" % game_id
+        cursor.execute(player_random)
+        records = cursor.fetchall()
+        playerList = []
+        for row in records:
+            player = row[0]
+            playerList.append(player)
+            cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+    return playerList
+
+
 
 # ----------------------------------------------------------------#
 # -------------------------Player Card----------------------------#

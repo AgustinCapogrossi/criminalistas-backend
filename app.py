@@ -50,7 +50,6 @@ async def websocket_endpoint(websocket: WebSocket, game_name: str, player_name: 
     Example of use:
         ws://127.0.0.1:8000/ws/1/5/
     """
-    print("////////////////////////////////////////")
     await manager.connect(websocket, game_name, player_name)
     try:
         out = player_in_game(game_name, player_name)
@@ -58,7 +57,7 @@ async def websocket_endpoint(websocket: WebSocket, game_name: str, player_name: 
             await manager.disconnect(game_name, player_name)
             return
 
-        listOfPlayers = get_players(game_name)
+        listOfPlayers = get_players_nickname(game_name)
         print(listOfPlayers)
         # broadcast JoinPlayerEvent
         msg = {"joinPlayerEvent": listOfPlayers}
@@ -285,11 +284,10 @@ async def start_the_game(game_to_start: str, name_player: str):
 
         enable_turn_to_player(host_name)
         generate_cards(game_to_start)
-        player_position_and_piece(player_name)
-        envelope(game_name)
-        player_with_monsters(a_game)
-        player_with_rooms(a_game)
-        player_with_victims(a_game)
+        envelope(game_to_start)
+        player_with_monsters(game_to_start)
+        player_with_rooms(game_to_start)
+        player_with_victims(game_to_start)
 
     return {"game started"}
 

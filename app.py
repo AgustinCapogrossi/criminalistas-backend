@@ -285,6 +285,12 @@ async def start_the_game(game_to_start: str, name_player: str):
 
         enable_turn_to_player(host_name)
         generate_cards(game_to_start)
+        player_position_and_piece(player_name)
+        envelope(game_name)
+        player_with_monsters(a_game)
+        player_with_rooms(a_game)
+        player_with_victims(a_game)
+
     return {"game started"}
 
 

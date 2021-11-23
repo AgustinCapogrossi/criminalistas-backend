@@ -271,7 +271,7 @@ async def start_the_game(game_to_start: str, name_player: str):
     elif not manager.exist_socket_of_player(game_to_start, name_player):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"player {game_to_start} doesn't has a socket connection",
+            detail=f"player {name_player} doesn't has a socket connection",
         )
 
     else:
@@ -285,11 +285,11 @@ async def start_the_game(game_to_start: str, name_player: str):
 
         enable_turn_to_player(host_name)
         generate_cards(game_to_start)
-        player_position_and_piece(player_name)
-        envelope(game_name)
-        player_with_monsters(a_game)
-        player_with_rooms(a_game)
-        player_with_victims(a_game)
+        player_position_and_piece(game_to_start)
+        envelope(game_to_start)
+        player_with_monsters(game_to_start)
+        player_with_rooms(game_to_start)
+        player_with_victims(game_to_start)
 
     return {"game started"}
 
@@ -328,12 +328,30 @@ async def delete_a_game(game_name: str):
         return {"game successfully deleted"}
 
 
+# Shows if the game is started or not
+@app.get("/game/{game_name}/is_started", tags=["Game Methods"])
+async def game_started(game_name):
+    res = is_started(game_name)
+    if res:
+        await manager.broadcast_json(
+            game_name,
+            {"isStartedEvent", f"The game: {game_name} is started."},
+        )
+        return {"game is started"}
+    else:
+        await manager.broadcast_json(
+            game_name,
+            {"isNotStartedEvent", f"The game: {game_name} is not started."},
+        )
+        return {"game is not started"}
+
+
 # ----------------------------------------- PLAYER -----------------------------------------
 
 # Ends Turn
 
 
-@app.post("/player/end turn", tags=["Player Methods"])
+@app.post("/game/{game_name}/{player_to_end_turn}/end turn", tags=["Player Methods"])
 async def end_turn(player_name, game_name):
     """A function which ends the turn of the selected player in the selected game.
     Args: \n
@@ -355,8 +373,17 @@ async def end_turn(player_name, game_name):
         raise HTTPException(status_code=404, detail="game has not started yet")
     elif not player_is_in_turn(player_name):
         raise HTTPException(status_code=404, detail="player is already not in turn")
+    elif not manager.exist_socket_of_player(game_name, player_name):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"player {player_name} doesn't has a socket connection",
+        )
     else:
         disable_turn_to_player(player_name)
+        await manager.broadcast_json(
+            game_name,
+            {"endTurnPlayer", f"End of the player's turn: {player_name}."},
+        )
         order = get_player_order(player_name)
         my_list = get_all_players()
         my_new_list = []
@@ -369,12 +396,20 @@ async def end_turn(player_name, game_name):
         for i in range(0, len(my_new_list), 1):
             if my_new_list[i][5] == order + 1:
                 enable_turn_to_player(my_new_list[i][1])
+                myNextPlayer = get_player(my_new_list[i][1])
+                await manager.broadcast_json(
+                    game_name,
+                    {"enableTurnNextPlayer", " Now it's " + myNextPlayer + "'s turn."},
+                )
+                return {
+                    player_name + "'s turns ended, " + myNextPlayer + "'s turn started."
+                }
 
 
 # Gives a number to a player
 
 
-@app.post("/player/dice_number", tags=["Player Methods"])
+@app.post("/player/{game_name}/{player_name}/dice_number", tags=["Player Methods"])
 async def dice_number(player_name, game_name):
     """The function generates a random dice number for the player.
     Args: \n
@@ -392,9 +427,13 @@ async def dice_number(player_name, game_name):
         and player_is_in_turn(player_name)
     ):
         dice = random_number_dice(player_name)
+        await manager.broadcast_json(
+            game_name,
+            {"throwDice", f"Player {player_name} got the number {dice}."},
+        )
+        return dice
     else:
         raise HTTPException(status_code=404, detail="game doesn't exist")
-    return dice
 
 
 # Shows Player
@@ -509,29 +548,8 @@ async def show_envelope_cards(player_name):
     )
 
 
-@app.post("/player/set_position_and_piece", tags=["Player Methods"])
-async def set_piece_position(player_name):
-    """Set piece and position of the player in the game.
-
-
-    Args: \n
-        player_name (str): Name of the player for whom we are generating the piece and position. \n
-
-    Raises: \n
-        HTTPException: The player does not exist. \n
-
-    Returns: \n
-        str: Verification text.
-    """
-    if player_exist(player_name):
-        player_position_and_piece(player_name)
-        return {"position and piece generated"}
-    elif not player_exist(player_name):
-        raise HTTPException(status_code=404, detail="player doesn't exist")
-
-
 @app.post("/player/move", tags=["Player Methods"])
-async def moving_player(player_name: str, direction: str):
+async def moving_player(game_name: str, player_name: str, direction: str):
     """Moves the player in the indicated position.
 
     Args: \n
@@ -546,21 +564,16 @@ async def moving_player(player_name: str, direction: str):
     Returns: \n
         str: Verification text.
     """
-    if get_player_dice(player_name) >= 1:
-        if player_exist(player_name) and (
-            direction == "W"
-            or direction == "w"
-            or direction == "S"
-            or direction == "s"
-            or direction == "A"
-            or direction == "a"
-            or direction == "D"
-            or direction == "d"
-        ):
-            move_player(player_name, direction)
-        elif not player_exist(player_name):
-            raise HTTPException(status_code=404, detail="player doesn't exist")
-        elif not (
+    if not player_exist(player_name):
+        raise HTTPException(status_code=404, detail="player doesn't exist")
+    elif not game_exist(game_name):
+        raise HTTPException(status_code=404, detail="Game doesn't exist.")
+    elif get_player_dice(player_name) < 1:
+        raise HTTPException(
+            status_code=404, detail="player doesn't have any moves left"
+        )
+    else:
+        if not (
             direction == "W"
             or direction == "w"
             or direction == "S"
@@ -571,10 +584,38 @@ async def moving_player(player_name: str, direction: str):
             or direction == "d"
         ):
             raise HTTPException(status_code=404, detail="error, use just AWSD keys")
-    else:
-        raise HTTPException(
-            status_code=404, detail="player doesn't have any moves left"
-        )
+        if (
+            direction == "W"
+            or direction == "w"
+            or direction == "S"
+            or direction == "s"
+            or direction == "A"
+            or direction == "a"
+            or direction == "D"
+            or direction == "d"
+        ):
+            if is_available(
+                get_coordinates_X(player_name, direction),
+                get_coordinates_Y(player_name, direction),
+            ):
+                move_player(player_name, direction)
+                myPlayer = get_my_player(player_name)
+
+                await manager.broadcast_json(
+                    game_name,
+                    {"movePlayer", f"Player {player_name} moved."},
+                )
+                return {
+                    "New player 'x' position: "
+                    + str(myPlayer.player_x)
+                    + ".  New player 'y' position: "
+                    + str(myPlayer.player_y)
+                    + ".  Player moves left: "
+                    + str(myPlayer.dice_number)
+                    + "."
+                }
+            else:
+                raise HTTPException(status_code=404, detail="illegal move")
 
 
 # ----------------------------------------- CARDS -----------------------------------------
